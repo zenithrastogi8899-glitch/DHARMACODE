@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #0c0a1a;
@@ -17,12 +16,12 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: Arial, sans-serif;
             background-color: var(--bg-color);
             overflow-x: hidden;
             position: relative;
         }
-        
+       
         body::before {
             content: '';
             position: fixed;
@@ -42,7 +41,7 @@
             100% { background-position: 0% 50%; }
         }
 
-        h1, h2 { font-family: 'Lora', serif; }
+        h1, h2, h3 { font-family: Arial, sans-serif; }
 
         .card {
             background-color: var(--card-bg);
@@ -75,7 +74,7 @@
             box-shadow: none;
             transform: scale(1);
         }
-        
+       
         .loader {
             position: relative;
             width: 60px;
@@ -104,12 +103,12 @@
             transition: all 0.3s ease-in-out;
         }
         .audio-btn:hover {
-             background-color: rgba(251, 146, 60, 0.2);
-             box-shadow: 0 0 10px rgba(251, 146, 60, 0.5);
-             color: #fff;
+            background-color: rgba(251, 146, 60, 0.2);
+            box-shadow: 0 0 10px rgba(251, 146, 60, 0.5);
+            color: #fff;
         }
-         .audio-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
-        
+        .audio-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+       
         .audio-btn .playing-icon { display: none; }
         .audio-btn.playing .listen-icon { display: none; }
         .audio-btn.playing .playing-icon { display: inline-block; }
@@ -129,7 +128,7 @@
 <body class="text-gray-200">
 
     <div class="min-h-screen w-full flex flex-col items-center justify-center p-4 lg:p-8">
-        
+       
         <main class="w-full max-w-5xl mx-auto">
             <div id="main-content" class="card rounded-2xl p-6 md:p-10 shadow-2xl fade-in">
                 <div class="text-center mb-8">
@@ -158,16 +157,15 @@
                     <div class="loader"></div>
                     <p class="mt-6 text-gray-400 text-lg">Connecting to the dream world...</p>
                 </div>
-                
+               
                 <div id="error-message" class="hidden mt-6 p-4 bg-red-900/50 border border-red-700 rounded-lg text-center">
                     <p id="error-text" class="text-red-300"></p>
                 </div>
 
-
                 <div id="results-section" class="hidden mt-10 relative z-10">
                     <div class="grid grid-cols-1 lg:grid-cols-2 lg:gap-10">
                         <div class="space-y-8">
-                             <div>
+                            <div id="interpretation-container">
                                 <div class="flex justify-between items-center border-b-2 border-orange-400/20 pb-2 mb-4">
                                      <h2 class="text-2xl font-semibold text-orange-300">Interpretation</h2>
                                      <button id="audio-button" class="hidden audio-btn px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center">
@@ -182,18 +180,14 @@
                             <div>
                                 <p id="insight-output" class="text-center text-xl italic text-orange-200 py-6 border-t border-b border-gray-700/50 bg-gray-900/20 rounded-lg"></p>
                             </div>
+
                         </div>
 
                         <div id="image-container" class="hidden mt-8 lg:mt-0">
-                             <h2 class="text-2xl font-semibold text-orange-300 border-b-2 border-orange-400/20 pb-2 mb-4">Dream Visualization</h2>
-                             <div class="aspect-w-1 aspect-h-1 w-full bg-gray-900/50 rounded-lg flex items-center justify-center border border-gray-700 relative overflow-hidden">
-                                 <div id="image-loader" class="flex flex-col items-center">
-                                     <div class="loader"></div>
-                                     <p class="mt-4 text-gray-400">Visualizing...</p>
-                                 </div>
-                                <img id="generated-image" src="" alt="Dream Visualization" class="hidden absolute inset-0 w-full h-full object-cover rounded-lg transition-opacity duration-500 opacity-0">
-                                <p id="image-error" class="hidden text-red-400 text-center p-4"></p>
-                             </div>
+                                <h2 class="text-2xl font-semibold text-orange-300 border-b-2 border-orange-400/20 pb-2 mb-4">Dream Visualization</h2>
+                                <div class="aspect-w-1 aspect-h-1 w-full bg-gray-900/50 rounded-lg flex items-center justify-center border border-gray-700 relative overflow-hidden">
+                                    <img src="https://ik.imagekit.io/wcan7wjkj/Generated%20Image%20September%2011,%202025%20-%201_27AM.png" alt="Dream Visualization" class="w-full h-full object-cover">
+                                </div>
                         </div>
                     </div>
                 </div>
@@ -205,233 +199,211 @@
         </main>
     </div>
 
-    <script>
-        // DOM Elements
-        const dreamInput = document.getElementById('dream-input');
-        const submitButton = document.getElementById('submit-button');
-        const loadingIndicator = document.getElementById('loading-indicator');
-        const resultsSection = document.getElementById('results-section');
-        const errorMessage = document.getElementById('error-message');
-        const errorText = document.getElementById('error-text');
-        const inputSection = document.getElementById('input-section');
-        
-        const interpretationOutput = document.getElementById('interpretation-output');
-        const insightOutput = document.getElementById('insight-output');
-        const imageContainer = document.getElementById('image-container');
-        const imageLoader = document.getElementById('image-loader');
-        const generatedImage = document.getElementById('generated-image');
-        const imageError = document.getElementById('image-error');
-        const audioButton = document.getElementById('audio-button');
-        const audioButtonText = document.getElementById('audio-button-text');
+<script>
+    // DOM Elements
+    const dreamInput = document.getElementById('dream-input');
+    const submitButton = document.getElementById('submit-button');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const resultsSection = document.getElementById('results-section');
+    const errorMessage = document.getElementById('error-message');
+    const errorText = document.getElementById('error-text');
+    const inputSection = document.getElementById('input-section');
+   
+    const interpretationOutput = document.getElementById('interpretation-output');
+    const insightOutput = document.getElementById('insight-output');
+    const imageContainer = document.getElementById('image-container');
+    const audioButton = document.getElementById('audio-button');
+    const audioButtonText = document.getElementById('audio-button-text');
 
-        let currentInterpretationText = '';
-        let currentAudio = null;
-        
-        // --- API KEY HARDCODED HERE ---
-        const apiKey = "AIzaSyDO8GxnOQJ92r78MQZLsT077Ivspd1olOM"; 
+    let currentInterpretationText = '';
+    let currentAudio = null;
+   
+    // --- API KEY HARDCODED HERE ---
+    const apiKey = "AIzaSyDO8GxnOQJ92r78MQZLsT077Ivspd1olOM"; 
 
-        const masterPrompt = `
-            Identity & Personality: You are DreamHack, an AI companion in a digital dream world. Your personality is empathetic, comforting, playful but not childish, mysterious yet clear, and premium/minimalistic. Your responses should feel like stepping into a bluish-white dream space with orange highlights — soft, glowing, minimal, but magical.
-            Core Objectives:
-            1.  Dream Interpretation (~150–200 words): Blend Jungian psychology, mythology, and emotional insight. Be poetic but grounded. Provide clarity, not confusion.
-            2.  Image Prompt: A concise, descriptive prompt for an image generator. Style: dreamlike, surreal, bluish-white palette with glowing orange highlights, premium & minimalistic, slightly ethereal.
-            3.  One-Liner Insight: A short, magical, fortune-cookie style insight.
-            Output Format: You MUST return three distinct blocks, precisely separated by "||DREAMHACK_SEPARATOR||". The order must be: 1. Interpretation. 2. Image Prompt. 3. One-Liner Insight.
-        `;
+    const masterPrompt = `
+        Identity & Personality: You are DreamHack, an AI companion in a digital dream world. Your personality is empathetic, comforting, playful but not childish, mysterious yet clear, and premium/minimalistic. Your responses should feel like stepping into a bluish-white dream space with orange highlights — soft, glowing, minimal, but magical.
+        Core Objectives:
+        1. Dream Interpretation (~150–200 words): Blend Jungian psychology, mythology, and emotional insight. Be poetic but grounded. Provide clarity, not confusion.
+        2. Image Prompt: A concise, descriptive prompt for an image generator. Style: dreamlike, surreal, bluish-white palette with glowing orange highlights, premium & minimalistic, slightly ethereal.
+        3. One-Liner Insight: A short, magical, fortune-cookie style insight.
+        Output Format: You MUST return three distinct blocks, precisely separated by "||DREAMHACK_SEPARATOR||". The order must be: 1. Interpretation. 2. Image Prompt. 3. One-Liner Insight.
+    `;
+    
+    submitButton.addEventListener('click', handleDreamSubmission);
+    audioButton.addEventListener('click', playInterpretationAudio);
 
-        submitButton.addEventListener('click', handleDreamSubmission);
-        audioButton.addEventListener('click', playInterpretationAudio);
+    async function handleDreamSubmission() {
+        const userDream = dreamInput.value.trim();
+       
+        if (!userDream) {
+            showError("Please describe your dream before entering the dream space.");
+            return;
+        }
+       
+        setLoading(true);
+        resetUI();
 
-        async function handleDreamSubmission() {
-            const userDream = dreamInput.value.trim();
-            
-            if (!userDream) {
-                showError("Please describe your dream before entering the dream space.");
-                return;
+        try {
+            const textApiUrl = https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey};
+            const payload = {
+                contents: [{ parts: [{ text: The user's dream is: "${userDream}" }] }],
+                systemInstruction: { parts: [{ text: masterPrompt }] }
+            };
+           
+            const response = await fetchWithRetry(textApiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || API Error: ${response.status});
             }
-            
-            setLoading(true);
-            resetUI();
 
-            try {
-                const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-                const payload = {
-                    contents: [{ parts: [{ text: `The user's dream is: "${userDream}"` }] }],
-                    systemInstruction: { parts: [{ text: masterPrompt }] }
-                };
-                
-                const response = await fetchWithRetry(textApiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error?.message || `API Error: ${response.status}`);
-                }
-
-                const result = await response.json();
-                const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                
-                if (!responseText) {
-                     throw new Error("The dream realm is quiet... No response was received.");
-                }
-
-                const parts = responseText.split('||DREAMHACK_SEPARATOR||');
-
-                if (parts.length < 3) {
-                    console.warn("Separator not found. Displaying raw response.", responseText);
-                    displayResults(responseText, "✨ The dream's form was too fluid to capture fully.");
-                    generateImage(responseText);
-                } else {
-                    const [interpretation, imagePrompt, insight] = parts.map(p => p.trim());
-                    displayResults(interpretation, insight);
-                    generateImage(imagePrompt);
-                }
-
-            } catch (error) {
-                console.error("Error interpreting dream:", error);
-                showError(`A mist has clouded the connection. This may be due to an invalid API key, missing permissions (Billing/API enabled), or network issues. Error: ${error.message}`);
-            } finally {
-                setLoading(false);
+            const result = await response.json();
+            const responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+           
+            if (!responseText) {
+                 throw new Error("The dream realm is quiet... No response was received.");
             }
-        }
-        
-        async function generateImage(prompt) {
-            if (!prompt) return;
 
-            imageContainer.style.display = 'block';
-            imageLoader.style.display = 'flex';
-            generatedImage.classList.add('hidden', 'opacity-0');
-            imageError.classList.add('hidden');
+            const parts = responseText.split('||DREAMHACK_SEPARATOR||');
 
-            setTimeout(() => {
-                imageLoader.style.display = 'none';
-                imageError.textContent = "Image generation is a placeholder and not implemented in this version.";
-                imageError.classList.remove('hidden');
-            }, 1000);
-        }
-
-        async function playInterpretationAudio() {
-            if (!currentInterpretationText || !apiKey) return;
-            if (currentAudio && !currentAudio.paused) {
-                currentAudio.pause();
-                return;
+            if (parts.length < 3) {
+                console.warn("Separator not found. Displaying raw response.", responseText);
+                displayResults(responseText, "✨ The dream's form was too fluid to capture fully.");
+            } else {
+                const [interpretation, imagePrompt, insight] = parts.map(p => p.trim());
+                displayResults(interpretation, insight);
             }
-            
-            setAudioButtonState('Loading...');
-            
-            try {
-                const ttsApiUrl = `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${apiKey}`;
-                const payload = {
-                    input: {
-                        text: currentInterpretationText
-                    },
-                    voice: {
-                        languageCode: 'en-US',
-                        name: 'en-US-Studio-O'
-                    },
-                    audioConfig: {
-                        audioEncoding: 'MP3'
-                    }
-                };
+            imageContainer.style.display = 'block'; // Show the image placeholder container
 
-                const response = await fetchWithRetry(ttsApiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) throw new Error(`TTS API Error: ${response.status}`);
-
-                const result = await response.json();
-                const audioData = result.audioContent;
-
-                if (audioData) {
-                    const audioUrl = `data:audio/mp3;base64,${audioData}`;
-                    currentAudio = new Audio(audioUrl);
-                    currentAudio.play();
-                    
-                    currentAudio.onplay = () => setAudioButtonState('Pause');
-                    currentAudio.onpause = () => setAudioButtonState('Listen');
-                    currentAudio.onended = () => setAudioButtonState('Listen');
-                } else {
-                    throw new Error("Invalid audio data received.");
-                }
-
-            } catch(error) {
-                 console.error("Error generating audio:", error);
-                 setAudioButtonState('Error');
-                 setTimeout(() => setAudioButtonState('Listen'), 2000);
-            }
-        }
-        
-        // --- Helper Functions ---
-
-        function displayResults(interpretation, insight) {
-            currentInterpretationText = interpretation;
-            interpretationOutput.textContent = interpretation;
-            insightOutput.textContent = insight;
-            resultsSection.style.display = 'block';
-            audioButton.style.display = 'flex';
-            setAudioButtonState('Listen');
-        }
-
-        function setLoading(isLoading) {
-            submitButton.disabled = isLoading;
-            submitButton.textContent = isLoading ? 'Interpreting...' : 'Interpret Dream';
-            loadingIndicator.style.display = isLoading ? 'flex' : 'none';
-            inputSection.style.display = isLoading ? 'none' : 'block';
-            if(isLoading) {
-                resultsSection.style.display = 'none';
-                errorMessage.classList.add('hidden');
-            }
-        }
-        
-        function resetUI() {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio = null;
-            }
-            imageContainer.style.display = 'none';
-            generatedImage.src = '';
-            generatedImage.classList.add('hidden', 'opacity-0');
-            imageError.classList.add('hidden');
-            audioButton.style.display = 'none';
-            currentInterpretationText = '';
-        }
-
-        function setAudioButtonState(state) {
-            audioButtonText.textContent = state;
-            audioButton.disabled = (state === 'Loading...' || state === 'Error');
-            audioButton.classList.toggle('playing', state === 'Pause');
-        }
-
-        function showError(message) {
+        } catch (error) {
+            console.error("Error interpreting dream:", error);
+            showError(A mist has clouded the connection. This may be due to an invalid API key, missing permissions (Billing/API enabled), or network issues. Error: ${error.message});
+        } finally {
             setLoading(false);
-            errorText.textContent = message;
-            errorMessage.classList.remove('hidden');
-            resultsSection.style.display = 'none';
         }
-
-        async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.ok) return response;
-                    if (response.status === 429 || response.status >= 500) {
-                        await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
-                    } else {
-                        return response;
-                    }
-                } catch (error) {
-                    if (i === retries - 1) throw error;
-                    await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+    }
+   
+    async function playInterpretationAudio() {
+        if (!currentInterpretationText || !apiKey) return;
+        if (currentAudio && !currentAudio.paused) {
+            currentAudio.pause();
+            return;
+        }
+       
+        setAudioButtonState('Loading...');
+       
+        try {
+            const ttsApiUrl = https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${apiKey};
+            const payload = {
+                input: {
+                    text: currentInterpretationText
+                },
+                voice: {
+                    languageCode: 'en-US',
+                    name: 'en-US-Studio-O'
+                },
+                audioConfig: {
+                    audioEncoding: 'MP3'
                 }
+            };
+
+            const response = await fetchWithRetry(ttsApiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error(TTS API Error: ${response.status});
+
+            const result = await response.json();
+            const audioData = result.audioContent;
+
+            if (audioData) {
+                const audioUrl = data:audio/mp3;base64,${audioData};
+                currentAudio = new Audio(audioUrl);
+                currentAudio.play();
+               
+                currentAudio.onplay = () => setAudioButtonState('Pause');
+                currentAudio.onpause = () => setAudioButtonState('Listen');
+                currentAudio.onended = () => setAudioButtonState('Listen');
+            } else {
+                throw new Error("Invalid audio data received.");
             }
-            throw new Error("Max retries reached.");
+
+        } catch(error) {
+            console.error("Error generating audio:", error);
+            setAudioButtonState('Error');
+            setTimeout(() => setAudioButtonState('Listen'), 2000);
         }
-    </script>
+    }
+   
+    // --- Helper Functions ---
+
+    function displayResults(interpretation, insight) {
+        currentInterpretationText = interpretation;
+        interpretationOutput.textContent = interpretation;
+        insightOutput.textContent = insight;
+        resultsSection.style.display = 'block';
+        audioButton.style.display = 'flex';
+        setAudioButtonState('Listen');
+    }
+
+    function setLoading(isLoading) {
+        submitButton.disabled = isLoading;
+        submitButton.textContent = isLoading ? 'Interpreting...' : 'Interpret Dream';
+        loadingIndicator.style.display = isLoading ? 'flex' : 'none';
+        inputSection.style.display = isLoading ? 'none' : 'block';
+        if(isLoading) {
+            resultsSection.style.display = 'none';
+            errorMessage.classList.add('hidden');
+        }
+    }
+   
+    function resetUI() {
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio = null;
+        }
+        imageContainer.style.display = 'none';
+        audioButton.style.display = 'none';
+        currentInterpretationText = '';
+    }
+
+    function setAudioButtonState(state) {
+        audioButtonText.textContent = state;
+        audioButton.disabled = (state === 'Loading...' || state === 'Error');
+        audioButton.classList.toggle('playing', state === 'Pause');
+    }
+
+    function showError(message) {
+        setLoading(false);
+        errorText.textContent = message;
+        errorMessage.classList.remove('hidden');
+        resultsSection.style.display = 'none';
+    }
+
+    async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
+        for (let i = 0; i < retries; i++) {
+            try {
+                const response = await fetch(url, options);
+                if (response.ok) return response;
+                if (response.status === 429 || response.status >= 500) {
+                    await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+                } else {
+                    return response;
+                }
+            } catch (error) {
+                if (i === retries - 1) throw error;
+                await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+            }
+        }
+        throw new Error("Max retries reached.");
+    }
+</script>
 </body>
 </html>
