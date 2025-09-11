@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DreamHack - Capture, Decode & Collect Your Dreams</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Transform dreams into collectible insights with Jungian interpretation, archetype mapping, and gamified progress tracking. Your subconscious, tracked.">
+    <meta property="og:title" content="DreamHack - Capture, Decode & Collect Your Dreams">
+    <meta property="og:description" content="Transform dreams into collectible insights with Jungian interpretation, archetype mapping, and gamified progress tracking.">
+    <meta property="og:type" content="website">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            borderRadius: {
+              lg: "var(--radius)",
+              md: "calc(var(--radius) - 2px)",
+              sm: "calc(var(--radius) - 4px)",
+            },
+            colors: {
+              background: "var(--background)",
+              foreground: "var(--foreground)",
+              card: {
+                DEFAULT: "var(--card)",
+                foreground: "var(--card-foreground)",
+              },
+              primary: {
+                DEFAULT: "var(--primary)",
+                foreground: "var(--primary-foreground)",
+              },
+              secondary: {
+                DEFAULT: "var(--secondary)",
+                foreground: "var(--secondary-foreground)",
+              },
+              muted: {
+                DEFAULT: "var(--muted)",
+                foreground: "var(--muted-foreground)",
+              },
+              accent: {
+                DEFAULT: "var(--accent)",
+                foreground: "var(--accent-foreground)",
+              },
+              destructive: {
+                DEFAULT: "var(--destructive)",
+                foreground: "var(--destructive-foreground)",
+              },
+              border: "var(--border)",
+              input: "var(--input)",
+              ring: "var(--ring)",
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            }
+          },
+        }
+      };
+    </script>
+    
+    <!-- Chart.js for Subconscious Map -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js'
+      import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js'
+      import { getFirestore, collection, addDoc, query, where, orderBy, getDocs, doc, setDoc, getDoc, updateDoc, increment, writeBatch } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js'
+
+      /* FIREBASE CONFIG - CONFIGURED */
+      // Firebase configuration from your project console
+      const firebaseConfig = {
+        apiKey: "AIzaSyCyNrMLP5KKWAncich4G393k4hU_Du1PeI",
+        authDomain: "dreambhai-2cd47.firebaseapp.com",
+        projectId: "dreambhai-2cd47",
+        storageBucket: "dreambhai-2cd47.firebasestorage.app",
+        messagingSenderId: "639429346814",
+        appId: "1:639429346814:web:6311b6127ba43064b92caf",
+        measurementId: "G-TX370NT2Z0"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      
+      // Make Firebase available globally
+      window.auth = auth;
+      window.db = db;
+      window.firebaseAuth = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged };
+      window.firestore = { collection, addDoc, query, where, orderBy, getDocs, doc, setDoc, getDoc, updateDoc, increment, writeBatch };
+
+      // Set Gemini API key - configured
+      window.GEMINI_API_KEY = 'AIzaSyBPfXUNrWWWJoOR42_5Kw21iIe5ju-l_Us';
+    </script>
+
+    <style>
+      :root {
+        --background: hsl(210, 40%, 98%);
+        --foreground: hsl(222.2, 84%, 4.9%);
+        --card: hsl(0, 0%, 100%);
+        --card-foreground: hsl(222.2, 84%, 4.9%);
+        --primary: hsl(210, 100%, 50%);
+        --primary-foreground: hsl(210, 40%, 98%);
+        --secondary: hsl(210, 40%, 96%);
+        --secondary-foreground: hsl(222.2, 47.4%, 11.2%);
+        --muted: hsl(210, 40%, 96%);
+        --muted-foreground: hsl(215.4, 16.3%, 46.9%);
+        --accent: hsl(25, 95%, 60%);
+        --accent-foreground: hsl(210, 40%, 98%);
+        --destructive: hsl(0, 84.2%, 60.2%);
+        --destructive-foreground: hsl(210, 40%, 98%);
+        --border: hsl(214.3, 31.8%, 91.4%);
+        --input: hsl(214.3, 31.8%, 91.4%);
+        --ring: hsl(210, 100%, 50%);
+        --radius: 0.75rem;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: var(--background);
+        color: var(--foreground);
+      }
+
+      .dream-card {
+        transition: all 0.2s ease-in-out;
+      }
+
+      .dream-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      }
+
+      .badge-glow {
+        animation: glow 2s ease-in-out infinite alternate;
+      }
+
+      @keyframes glow {
+        from { box-shadow: 0 0 5px var(--accent); }
+        to { box-shadow: 0 0 20px var(--accent), 0 0 30px var(--accent); }
+      }
+
+      .loading-spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid var(--primary);
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .slide-up {
+        animation: slideUp 0.3s ease-out;
+      }
+
+      @keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .line-clamp-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .error-message {
+        color: var(--destructive);
+        background-color: hsl(0, 84.2%, 60.2%, 0.1);
+        border: 1px solid hsl(0, 84.2%, 60.2%, 0.2);
+      }
+
+      .success-message {
+        color: hsl(120, 100%, 25%);
+        background-color: hsl(120, 100%, 25%, 0.1);
+        border: 1px solid hsl(120, 100%, 25%, 0.2);
+      }
+    </style>
+</head>
+<body class="min-h-screen bg-background">
+    <!-- 
+    DREAMHACK DEMO CHECKLIST FOR JUDGES:
+    ✓ Sign up with email
+    ✓ Log a dream  
+    ✓ See interpretation and Save
+    ✓ View the Dream Card in Journal (Card + Timeline)
+    ✓ Check Profile - streaks, tokens, badges update
+    ✓ Confirm recurring tags are highlighted and subconscious map updates
+    
+    SETUP INSTRUCTIONS FOR REPLIT:
+    1. Create new Replit static web project
+    2. Replace index.html with this file
+    3. Get Firebase config from Firebase Console:
+       - Go to https://console.firebase.google.com/
+       - Create new project or use existing
+       - Go to Project Settings > General > Your apps
+       - Add web app if none exists
+       - Copy config object and paste in marked section above
+       - Enable Authentication (Email/Password) and Firestore
+    4. Get Gemini API key:
+       - Go to https://aistudio.google.com/app/apikey
+       - Create API key and replace YOUR_GEMINI_API_KEY_HERE below
+    5. Hit Run/Preview
+    -->
+
+    <!-- Navigation -->
+    <nav class="bg-card border-b border-border shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                            <span class="text-primary-foreground font-bold text-lg">D</span>
+                        </div>
+                        <span class="font-bold text-xl text-foreground">DreamHack</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div id="authButtons" class="flex items-center space-x-2">
+                        <button id="loginBtn" data-testid="button-login" class="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                            Sign In
+                        </button>
+                        <button id="signupBtn" data-testid="button-signup" class="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
+                            Sign Up
+                        </button>
+                    </div>
+                    
+                    <div id="userMenu" class="hidden flex items-center space-x-4">
+                        <span id="userEmail" data-testid="text-user-email" class="text-sm text-muted-foreground"></span>
+                        <button id="logoutBtn" data-testid="button-logout" class="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main App Container -->
+    <div id="appContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Landing/Welcome Section -->
+        <div id="welcomeSection" class="text-center py-16">
+            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-6">
+                Capture, Decode & Collect Your Dreams
+            </h1>
+            <p class="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+                Your Subconscious, Tracked. Transform dreams into collectible insights with Jungian interpretation, archetype mapping, and gamified progress tracking.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <button id="getStartedBtn" data-testid="button-get-started" class="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                    Get Started
+                </button>
+                <p class="text-sm text-muted-foreground">
+                    Your dreams are private by default — share anonymized patterns only if you opt in.
+                </p>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboardSection" class="hidden">
+            <!-- Tab Navigation -->
+            <div class="border-b border-border mb-8">
+                <nav class="flex space-x-8">
+                    <button data-tab="journal" data-testid="tab-journal" class="tab-btn py-2 px-1 border-b-2 border-primary text-primary font-medium">
+                        Dream Journal
+                    </button>
+                    <button data-tab="log" data-testid="tab-log" class="tab-btn py-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors">
+                        Log Dream
+                    </button>
+                    <button data-tab="profile" data-testid="tab-profile" class="tab-btn py-2 px-1 border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-colors">
+                        Profile
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Dream Journal Tab -->
+            <div id="journalTab" class="tab-content">
+                <!-- Journal Controls -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div class="flex items-center space-x-4">
+                        <h2 class="text-2xl font-bold text-foreground">Dream Journal</h2>
+                        <div class="flex bg-muted rounded-lg p-1">
+                            <button id="cardViewBtn" data-testid="button-card-view" class="px-3 py-1 rounded-md bg-card text-card-foreground shadow-sm font-medium text-sm">
+                                Cards
+                            </button>
+                            <button id="timelineViewBtn" data-testid="button-timeline-view" class="px-3 py-1 rounded-md text-muted-foreground font-medium text-sm hover:text-foreground transition-colors">
+                                Timeline
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <input type="text" id="searchDreams" data-testid="input-search" placeholder="Search dreams, tags..." 
+                                   class="pl-10 pr-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                            <svg class="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        
+                        <select id="filterArchetype" data-testid="select-filter" class="px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                            <option value="">All Archetypes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Dreams Grid View -->
+                <div id="dreamsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dreams will be populated here -->
+                </div>
+
+                <!-- Dreams Timeline View -->
+                <div id="dreamsTimeline" class="hidden space-y-6">
+                    <!-- Timeline items will be populated here -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="text-center py-16 hidden">
+                    <div class="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2M4 13h2m13-8V4a1 1 0 00-1-1H7a1 1 0 00-1 1v1m8 0V4.5"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-foreground mb-2">No dreams yet</h3>
+                    <p class="text-muted-foreground mb-4">Start your dream journey by logging your first dream.</p>
+                    <button onclick="switchTab('log')" class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                        Log First Dream
+                    </button>
+                </div>
+            </div>
+
+            <!-- Log Dream Tab -->
+            <div id="logTab" class="tab-content hidden">
+                <div class="max-w-2xl mx-auto">
+                    <h2 class="text-2xl font-bold text-foreground mb-6">Log New Dream</h2>
+                    
+                    <form id="dreamForm" class="space-y-6">
+                        <div>
+                            <label for="dreamTitle" class="block text-sm font-medium text-foreground mb-2">
+                                Dream Title
+                            </label>
+                            <input type="text" id="dreamTitle" data-testid="input-dream-title" required
+                                   class="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                                   placeholder="Give your dream a memorable title...">
+                        </div>
+                        
+                        <div>
+                            <label for="dreamDescription" class="block text-sm font-medium text-foreground mb-2">
+                                Dream Description
+                            </label>
+                            <textarea id="dreamDescription" data-testid="input-dream-description" rows="8" required
+                                      class="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                                      placeholder="Describe your dream in as much detail as you can remember..."></textarea>
+                        </div>
+                        
+                        <button type="submit" id="submitDream" data-testid="button-analyze-dream" 
+                                class="w-full py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center space-x-2">
+                            <span>Analyze & Save Dream</span>
+                            <div id="dreamSpinner" class="loading-spinner hidden"></div>
+                        </button>
+                    </form>
+                    
+                    <!-- Dream Analysis Result -->
+                    <div id="dreamAnalysis" class="hidden mt-8 p-6 bg-card rounded-lg border border-border">
+                        <h3 class="text-lg font-semibold text-card-foreground mb-4">Jungian Analysis</h3>
+                        <div id="analysisContent" class="space-y-4">
+                            <!-- Analysis content will be populated here -->
+                        </div>
+                        <button id="saveDreamBtn" data-testid="button-save-dream" class="mt-4 px-6 py-2 bg-accent text-accent-foreground rounded-lg font-medium hover:bg-accent/90 transition-colors">
+                            Save to Journal
+                        </button>
+                    </div>
+
+                    <!-- Error Message -->
+                    <div id="analysisError" class="hidden mt-4 p-3 error-message rounded-lg">
+                        <p class="text-sm"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="profileTab" class="tab-content hidden">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-2xl font-bold text-foreground mb-8">Profile Dashboard</h2>
+                    
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-card rounded-lg border border-border p-6 text-center">
+                            <div class="text-3xl font-bold text-primary mb-2" data-testid="stat-total-dreams" data-bind="user.totalDreams">0</div>
+                            <div class="text-sm text-muted-foreground">Total Dreams</div>
+                        </div>
+                        
+                        <div class="bg-card rounded-lg border border-border p-6 text-center">
+                            <div class="text-3xl font-bold text-accent mb-2" data-testid="stat-current-streak" data-bind="user.currentStreak">0</div>
+                            <div class="text-sm text-muted-foreground">Current Streak</div>
+                        </div>
+                        
+                        <div class="bg-card rounded-lg border border-border p-6 text-center">
+                            <div class="text-3xl font-bold text-primary mb-2" data-testid="stat-total-tokens" data-bind="user.totalTokens">0</div>
+                            <div class="text-sm text-muted-foreground">Total Tokens</div>
+                        </div>
+                        
+                        <div class="bg-card rounded-lg border border-border p-6 text-center">
+                            <div class="text-3xl font-bold text-accent mb-2" data-testid="stat-badge-count" data-bind="user.badgeCount">0</div>
+                            <div class="text-sm text-muted-foreground">Badges Earned</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Badges Section -->
+                    <div class="bg-card rounded-lg border border-border p-6 mb-8">
+                        <h3 class="text-lg font-semibold text-card-foreground mb-4">Archetype Badges</h3>
+                        <div id="badgeGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            <!-- Badges will be populated here -->
+                        </div>
+                        <div id="noBadges" class="text-center py-8 hidden">
+                            <p class="text-muted-foreground">No badges earned yet. Log more dreams to unlock archetype badges!</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Subconscious Map -->
+                    <div class="bg-card rounded-lg border border-border p-6">
+                        <h3 class="text-lg font-semibold text-card-foreground mb-4">Subconscious Map</h3>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-sm font-medium text-card-foreground mb-3">Top Recurring Themes</h4>
+                                <div id="themesChart" class="space-y-3">
+                                    <!-- Theme bars will be populated here -->
+                                </div>
+                                <div id="noThemes" class="text-center py-8 hidden">
+                                    <p class="text-muted-foreground text-sm">No recurring themes yet. Log more dreams to see patterns emerge!</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-sm font-medium text-card-foreground mb-3">Archetype Distribution</h4>
+                                <div class="h-48 flex items-center justify-center">
+                                    <canvas id="archetypeChart" width="300" height="200"></canvas>
+                                    <div id="noArchetypes" class="text-center hidden">
+                                        <p class="text-muted-foreground text-sm">No archetype data yet. Log more dreams to build your subconscious map!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Modals -->
+    <!-- Sign Up Modal -->
+    <div id="signupModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-card rounded-lg p-6 w-full max-w-md slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-card-foreground">Sign Up for DreamHack</h2>
+                <button id="closeSignupModal" data-testid="button-close-signup" class="text-muted-foreground hover:text-foreground">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="signupForm" class="space-y-4">
+                <div>
+                    <label for="signupEmail" class="block text-sm font-medium text-card-foreground mb-2">Email</label>
+                    <input type="email" id="signupEmail" data-testid="input-signup-email" required
+                           class="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                </div>
+                
+                <div>
+                    <label for="signupPassword" class="block text-sm font-medium text-card-foreground mb-2">Password</label>
+                    <input type="password" id="signupPassword" data-testid="input-signup-password" required
+                           class="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="shareAnonymized" data-testid="checkbox-share-data" class="rounded border-input text-primary focus:ring-ring">
+                    <label for="shareAnonymized" class="text-sm text-muted-foreground">
+                        Share anonymized pattern data to help improve insights
+                    </label>
+                </div>
+                
+                <button type="submit" data-testid="button-create-account" class="w-full py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                    Create Account
+                </button>
+            </form>
+            
+            <div id="signupError" class="hidden mt-4 p-3 error-message rounded-lg">
+                <p class="text-sm"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-card rounded-lg p-6 w-full max-w-md slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-card-foreground">Welcome Back</h2>
+                <button id="closeLoginModal" data-testid="button-close-login" class="text-muted-foreground hover:text-foreground">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="loginEmail" class="block text-sm font-medium text-card-foreground mb-2">Email</label>
+                    <input type="email" id="loginEmail" data-testid="input-login-email" required
+                           class="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                </div>
+                
+                <div>
+                    <label for="loginPassword" class="block text-sm font-medium text-card-foreground mb-2">Password</label>
+                    <input type="password" id="loginPassword" data-testid="input-login-password" required
+                           class="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
+                </div>
+                
+                <button type="submit" data-testid="button-sign-in" class="w-full py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                    Sign In
+                </button>
+            </form>
+            
+            <div id="loginError" class="hidden mt-4 p-3 error-message rounded-lg">
+                <p class="text-sm"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Not a Wrapper Modal -->
+    <div id="notWrapperModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-card rounded-lg p-6 w-full max-w-md slide-up">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-bold text-card-foreground mb-2">This Isn't Just a Wrapper</h2>
+                <p class="text-muted-foreground mb-6">
+                    DreamHack remembers, maps, and rewards your subconscious — this is an evolving ecosystem, not a one-off reply.
+                </p>
+                <button id="closeNotWrapperModal" data-testid="button-got-it" class="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                    Got it!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div id="successToast" class="fixed bottom-4 right-4 bg-card border border-border rounded-lg p-4 shadow-lg hidden z-50">
+        <div class="flex items-center space-x-3">
+            <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <p id="successMessage" class="text-sm font-medium text-foreground"></p>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentUser = null;
+        let currentTab = 'journal';
+        let currentView = 'cards';
+        let dreams = [];
+        let userProfile = null;
+        let archetypeChart = null;
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            setupEventListeners();
+            
+            // Check authentication state
+            if (window.auth && window.firebaseAuth) {
+                window.firebaseAuth.onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        currentUser = user;
+                        showDashboard();
+                        loadUserData();
+                    } else {
+                        currentUser = null;
+                        showWelcome();
+                    }
+                });
+            } else {
+                console.error('Firebase not initialized. Please check your Firebase configuration.');
+                showError('Firebase configuration missing. Please check setup instructions.');
+            }
+
+            // Load draft from localStorage
+            loadDraftFromLocal();
+            
+            // Show "not a wrapper" modal after 5 seconds for demo
+            setTimeout(() => {
+                if (!localStorage.getItem('seenNotWrapper')) {
+                    document.getElementById('notWrapperModal').classList.remove('hidden');
+                    localStorage.setItem('seenNotWrapper', 'true');
+                }
+            }, 5000);
+        }
+
+        function setupEventListeners() {
+            // Navigation
+            document.getElementById('loginBtn').addEventListener('click', () => showModal('loginModal'));
+            document.getElementById('signupBtn').addEventListener('click', () => showModal('signupModal'));
+            document.getElementById('getStartedBtn').addEventListener('click', () => showModal('signupModal'));
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+
+            // Modal controls
+            document.getElementById('closeSignupModal').addEventListener('click', () => hideModal('signupModal'));
+            document.getElementById('closeLoginModal').addEventListener('click', () => hideModal('loginModal'));
+            document.getElementById('closeNotWrapperModal').addEventListener('click', () => hideModal('notWrapperModal'));
+
+            // Forms
+            document.getElementById('signupForm').addEventListener('submit', handleSignup);
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('dreamForm').addEventListener('submit', handleDreamSubmit);
+
+            // Tab navigation
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => switchTab(e.target.dataset.tab));
+            });
+
+            // View toggles
+            document.getElementById('cardViewBtn').addEventListener('click', () => switchView('cards'));
+            document.getElementById('timelineViewBtn').addEventListener('click', () => switchView('timeline'));
+
+            // Search and filter
+            document.getElementById('searchDreams').addEventListener('input', filterDreams);
+            document.getElementById('filterArchetype').addEventListener('change', filterDreams);
+
+            // Save dream button
+            const saveDreamBtn = document.getElementById('saveDreamBtn');
+            if (saveDreamBtn) {
+                saveDreamBtn.addEventListener('click', saveDreamToFirestore);
+            }
+
+            // Auto-save drafts
+            document.getElementById('dreamTitle')?.addEventListener('input', (e) => {
+                const description = document.getElementById('dreamDescription').value;
+                if (e.target.value || description) {
+                    saveDraftToLocal(e.target.value, description);
+                }
+            });
+
+            document.getElementById('dreamDescription')?.addEventListener('input', (e) => {
+                const title = document.getElementById('dreamTitle').value;
+                if (e.target.value || title) {
+                    saveDraftToLocal(title, e.target.value);
+                }
+            });
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function showWelcome() {
+            document.getElementById('welcomeSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('authButtons').classList.remove('hidden');
+            document.getElementById('userMenu').classList.add('hidden');
+        }
+
+        function showDashboard() {
+            document.getElementById('welcomeSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('authButtons').classList.add('hidden');
+            document.getElementById('userMenu').classList.remove('hidden');
+            document.getElementById('userEmail').textContent = currentUser?.email || '';
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const shareAnonymized = document.getElementById('shareAnonymized').checked;
+
+            try {
+                const userCredential = await window.firebaseAuth.createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Create user profile in Firestore
+                await window.firestore.setDoc(window.firestore.doc(db, 'users', user.uid), {
+                    email: user.email,
+                    streakCount: 0,
+                    currentStreak: 0,
+                    totalTokens: 0,
+                    badges: [],
+                    shareAnonymized: shareAnonymized,
+                    createdAt: new Date(),
+                    lastDreamDate: null
+                });
+
+                hideModal('signupModal');
+                showDashboard();
+                showSuccessToast('Account created successfully!');
+            } catch (error) {
+                showError('signupError', getErrorMessage(error));
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                await window.firebaseAuth.signInWithEmailAndPassword(auth, email, password);
+                hideModal('loginModal');
+                showSuccessToast('Welcome back!');
+            } catch (error) {
+                showError('loginError', getErrorMessage(error));
+            }
+        }
+
+        async function logout() {
+            try {
+                await window.firebaseAuth.signOut(auth);
+                showWelcome();
+                dreams = [];
+                userProfile = null;
+                showSuccessToast('Logged out successfully');
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        function showError(elementId, message) {
+            const errorEl = document.getElementById(elementId);
+            if (errorEl) {
+                errorEl.querySelector('p').textContent = message;
+                errorEl.classList.remove('hidden');
+                setTimeout(() => {
+                    errorEl.classList.add('hidden');
+                }, 5000);
+            }
+        }
+
+        function getErrorMessage(error) {
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    return 'Email is already registered. Please use a different email or sign in.';
+                case 'auth/weak-password':
+                    return 'Password is too weak. Please choose a stronger password.';
+                case 'auth/invalid-email':
+                    return 'Please enter a valid email address.';
+                case 'auth/user-not-found':
+                    return 'No account found with this email. Please sign up first.';
+                case 'auth/wrong-password':
+                    return 'Incorrect password. Please try again.';
+                case 'auth/invalid-credential':
+                    return 'Invalid email or password. Please check your credentials.';
+                default:
+                    return error.message || 'An error occurred. Please try again.';
+            }
+        }
+
+        function showSuccessToast(message) {
+            const toast = document.getElementById('successToast');
+            const messageEl = document.getElementById('successMessage');
+            messageEl.textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-primary', 'text-primary');
+                btn.classList.add('border-transparent', 'text-muted-foreground');
+            });
+            const activeTab = document.querySelector(`[data-tab="${tab}"]`);
+            if (activeTab) {
+                activeTab.classList.add('border-primary', 'text-primary');
+                activeTab.classList.remove('border-transparent', 'text-muted-foreground');
+            }
+
+            // Show/hide tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            const tabContent = document.getElementById(`${tab}Tab`);
+            if (tabContent) {
+                tabContent.classList.remove('hidden');
+            }
+        }
+
+        function switchView(view) {
+            currentView = view;
+            
+            if (view === 'cards') {
+                document.getElementById('cardViewBtn').classList.add('bg-card', 'text-card-foreground', 'shadow-sm');
+                document.getElementById('cardViewBtn').classList.remove('text-muted-foreground');
+                document.getElementById('timelineViewBtn').classList.remove('bg-card', 'text-card-foreground', 'shadow-sm');
+                document.getElementById('timelineViewBtn').classList.add('text-muted-foreground');
+                
+                document.getElementById('dreamsGrid').classList.remove('hidden');
+                document.getElementById('dreamsTimeline').classList.add('hidden');
+            } else {
+                document.getElementById('timelineViewBtn').classList.add('bg-card', 'text-card-foreground', 'shadow-sm');
+                document.getElementById('timelineViewBtn').classList.remove('text-muted-foreground');
+                document.getElementById('cardViewBtn').classList.remove('bg-card', 'text-card-foreground', 'shadow-sm');
+                document.getElementById('cardViewBtn').classList.add('text-muted-foreground');
+                
+                document.getElementById('dreamsGrid').classList.add('hidden');
+                document.getElementById('dreamsTimeline').classList.remove('hidden');
+            }
+        }
+
+        async function handleDreamSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById('dreamTitle').value.trim();
+            const description = document.getElementById('dreamDescription').value.trim();
+
+            if (!title || !description) {
+                showError('analysisError', 'Please fill in both title and description.');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('dreamSpinner').classList.remove('hidden');
+            document.getElementById('submitDream').disabled = true;
+            document.getElementById('analysisError').classList.add('hidden');
+
+            try {
+                // Call Gemini API for interpretation
+                const geminiApiKey = window.GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY_HERE'; // Will be injected by environment
+                
+                const interpretation = await callGeminiAPI(title, description, geminiApiKey);
+                
+                displayDreamAnalysis(title, description, interpretation);
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showError('analysisError', 'Failed to analyze dream. Please check your Gemini API key configuration and try again.');
+            } finally {
+                document.getElementById('dreamSpinner').classList.add('hidden');
+                document.getElementById('submitDream').disabled = false;
+            }
+        }
+
+        async function callGeminiAPI(title, description, apiKey) {
+            // Check if API key is configured
+            if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
+                throw new Error('Gemini API key not configured. Please replace YOUR_GEMINI_API_KEY_HERE with your actual API key.');
+            }
+
+            const prompt = `Analyze the following dream from a Jungian psychological perspective:
+
+Title: ${title}
+Description: ${description}
+
+Please provide:
+1. A detailed Jungian interpretation (2-3 sentences)
+2. A list of 3-5 archetypal symbols or themes found in the dream
+
+Return the response as JSON in this exact format:
+{
+  "interpretation": "Your detailed Jungian interpretation here...",
+  "tags": ["archetype1", "archetype2", "symbol1", "theme1", "symbol2"]
+}`;
+
+            const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' + apiKey, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        topK: 1,
+                        topP: 1,
+                        maxOutputTokens: 2048,
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Gemini API error: ${errorData.error?.message || 'Unknown error'}`);
+            }
+
+            const data = await response.json();
+            const generatedText = data.candidates[0].content.parts[0].text;
+            
+            // Try to parse JSON from the response
+            try {
+                const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    return JSON.parse(jsonMatch[0]);
+                }
+            } catch (parseError) {
+                console.warn('Could not parse JSON from Gemini response, using fallback parsing');
+            }
+            
+            // Fallback parsing if JSON parsing fails
+            return {
+                interpretation: generatedText.split('\n')[0] || 'Unable to generate interpretation',
+                tags: ['unconscious', 'symbols', 'archetype', 'meaning']
+            };
+        }
+
+        function displayDreamAnalysis(title, description, analysis) {
+            const analysisDiv = document.getElementById('analysisContent');
+            analysisDiv.innerHTML = `
+                <div class="mb-4">
+                    <h4 class="font-medium text-card-foreground mb-2">Your Dream: ${escapeHtml(title)}</h4>
+                    <p class="text-sm text-muted-foreground">${escapeHtml(description)}</p>
+                </div>
+                <div class="mb-4">
+                    <h4 class="font-medium text-card-foreground mb-2">Jungian Interpretation:</h4>
+                    <p class="text-sm text-muted-foreground">${escapeHtml(analysis.interpretation)}</p>
+                </div>
+                <div>
+                    <h4 class="font-medium text-card-foreground mb-2">Identified Archetypes & Symbols:</h4>
+                    <div class="flex flex-wrap gap-2">
+                        ${analysis.tags.map(tag => `
+                            <span class="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">${escapeHtml(tag)}</span>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            // Store for saving
+            window.currentDreamAnalysis = { title, description, analysis };
+            document.getElementById('dreamAnalysis').classList.remove('hidden');
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        async function saveDreamToFirestore() {
+            if (!currentUser || !window.currentDreamAnalysis) return;
+
+            try {
+                const dreamData = {
+                    userId: currentUser.uid,
+                    title: window.currentDreamAnalysis.title,
+                    description: window.currentDreamAnalysis.description,
+                    interpretation: window.currentDreamAnalysis.analysis.interpretation,
+                    tags: window.currentDreamAnalysis.analysis.tags,
+                    dateCreated: new Date(),
+                    tokensEarned: 5 // Base tokens per dream
+                };
+
+                // Add dream to Firestore
+                await window.firestore.addDoc(window.firestore.collection(db, `users/${currentUser.uid}/dreams`), dreamData);
+
+                // Update user stats
+                await updateUserStats(dreamData.tokensEarned, dreamData.tags);
+
+                // Clear form and analysis
+                document.getElementById('dreamForm').reset();
+                document.getElementById('dreamAnalysis').classList.add('hidden');
+                window.currentDreamAnalysis = null;
+                localStorage.removeItem('dreamDraft');
+
+                // Switch to journal tab and reload data
+                switchTab('journal');
+                await loadUserData();
+                
+                showSuccessToast('Dream saved successfully!');
+            } catch (error) {
+                console.error('Error saving dream:', error);
+                showError('analysisError', 'Failed to save dream. Please try again.');
+            }
+        }
+
+        async function updateUserStats(tokensEarned, tags) {
+            if (!currentUser) return;
+
+            try {
+                const userRef = window.firestore.doc(db, 'users', currentUser.uid);
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                
+                // Get current user data
+                const userDoc = await window.firestore.getDoc(userRef);
+                const userData = userDoc.data();
+                
+                // Calculate streak
+                let newStreak = 1;
+                if (userData.lastDreamDate) {
+                    const lastDate = userData.lastDreamDate.toDate();
+                    const lastDateOnly = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
+                    const dayDiff = Math.floor((today - lastDateOnly) / (1000 * 60 * 60 * 24));
+                    
+                    if (dayDiff === 0) {
+                        // Same day, maintain current streak
+                        newStreak = userData.currentStreak || 1;
+                    } else if (dayDiff === 1) {
+                        // Consecutive day, increment streak
+                        newStreak = (userData.currentStreak || 0) + 1;
+                    } else {
+                        // Gap in days, reset streak
+                        newStreak = 1;
+                    }
+                }
+
+                // Update user document
+                await window.firestore.updateDoc(userRef, {
+                    totalTokens: window.firestore.increment(tokensEarned),
+                    currentStreak: newStreak,
+                    lastDreamDate: now
+                });
+
+                // Check and update badges
+                await updateBadges(userRef, tags);
+
+                // Update global tag counts if user opted in
+                if (userData.shareAnonymized) {
+                    await updateGlobalTagCounts(tags);
+                }
+            } catch (error) {
+                console.error('Error updating user stats:', error);
+            }
+        }
+
+        async function updateBadges(userRef, dreamTags) {
+            try {
+                const userDoc = await window.firestore.getDoc(userRef);
+                const userData = userDoc.data();
+                const currentBadges = userData.badges || [];
+
+                // Count tag occurrences across all dreams
+                const tagCounts = {};
+                dreams.forEach(dream => {
+                    dream.tags?.forEach(tag => {
+                        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                    });
+                });
+
+                // Add current dream tags
+                dreamTags.forEach(tag => {
+                    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                });
+
+                const newBadges = [...currentBadges];
+                const badgeThreshold = 3; // Need 3 dreams with same archetype
+
+                // Check for new badges
+                Object.entries(tagCounts).forEach(([tag, count]) => {
+                    if (count >= badgeThreshold && !currentBadges.includes(tag)) {
+                        newBadges.push(tag);
+                    }
+                });
+
+                if (newBadges.length > currentBadges.length) {
+                    await window.firestore.updateDoc(userRef, {
+                        badges: newBadges
+                    });
+                    
+                    const newBadgeNames = newBadges.filter(b => !currentBadges.includes(b));
+                    showSuccessToast(`New badge unlocked: ${newBadgeNames.join(', ')}!`);
+                }
+            } catch (error) {
+                console.error('Error updating badges:', error);
+            }
+        }
+
+        async function updateGlobalTagCounts(tags) {
+            try {
+                const batch = window.firestore.writeBatch(db);
+                
+                tags.forEach(tag => {
+                    const tagRef = window.firestore.doc(db, 'globalTagCounts', tag);
+                    batch.set(tagRef, {
+                        count: window.firestore.increment(1)
+                    }, { merge: true });
+                });
+
+                await batch.commit();
+            } catch (error) {
+                console.error('Error updating global tag counts:', error);
+            }
+        }
+
+        async function loadUserData() {
+            if (!currentUser) return;
+
+            try {
+                // Load user profile
+                const userDoc = await window.firestore.getDoc(window.firestore.doc(db, 'users', currentUser.uid));
+                if (userDoc.exists()) {
+                    userProfile = userDoc.data();
+                } else {
+                    // Create user profile if it doesn't exist
+                    userProfile = {
+                        email: currentUser.email,
+                        streakCount: 0,
+                        currentStreak: 0,
+                        totalTokens: 0,
+                        badges: [],
+                        shareAnonymized: false,
+                        createdAt: new Date(),
+                        lastDreamDate: null
+                    };
+                    await window.firestore.setDoc(window.firestore.doc(db, 'users', currentUser.uid), userProfile);
+                }
+
+                // Load user dreams
+                const dreamsQuery = window.firestore.query(
+                    window.firestore.collection(db, `users/${currentUser.uid}/dreams`),
+                    window.firestore.orderBy('dateCreated', 'desc')
+                );
+                const dreamSnapshot = await window.firestore.getDocs(dreamsQuery);
+                dreams = dreamSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Update UI with loaded data
+                updateDashboardStats();
+                renderDreams();
+                updateSubconsciousMap();
+                populateArchetypeFilter();
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showError('general', 'Failed to load your data. Please refresh the page.');
+            }
+        }
+
+        function updateDashboardStats() {
+            if (!userProfile) return;
+
+            // Update stats display
+            const totalDreamsEl = document.querySelector('[data-bind="user.totalDreams"]');
+            const currentStreakEl = document.querySelector('[data-bind="user.currentStreak"]');
+            const totalTokensEl = document.querySelector('[data-bind="user.totalTokens"]');
+            const badgeCountEl = document.querySelector('[data-bind="user.badgeCount"]');
+
+            if (totalDreamsEl) totalDreamsEl.textContent = dreams.length;
+            if (currentStreakEl) currentStreakEl.textContent = userProfile.currentStreak || 0;
+            if (totalTokensEl) totalTokensEl.textContent = userProfile.totalTokens || 0;
+            if (badgeCountEl) badgeCountEl.textContent = (userProfile.badges || []).length;
+        }
+
+        function renderDreams() {
+            const gridContainer = document.getElementById('dreamsGrid');
+            const timelineContainer = document.getElementById('dreamsTimeline');
+            const emptyState = document.getElementById('emptyState');
+
+            if (dreams.length === 0) {
+                gridContainer.innerHTML = '';
+                timelineContainer.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            // Render grid view
+            gridContainer.innerHTML = dreams.map(dream => createDreamCard(dream)).join('');
+
+            // Render timeline view
+            timelineContainer.innerHTML = dreams.map(dream => createTimelineItem(dream)).join('');
+        }
+
+        function createDreamCard(dream) {
+            const date = dream.dateCreated?.toDate ? dream.dateCreated.toDate() : new Date(dream.dateCreated);
+            const relativeDate = getRelativeDate(date);
+            
+            return `
+                <div class="dream-card bg-card rounded-lg border border-border p-6 shadow-sm hover:shadow-md transition-all cursor-pointer" data-testid="card-dream-${dream.id}">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-semibold text-card-foreground text-lg">${escapeHtml(dream.title)}</h3>
+                        <span class="text-xs text-muted-foreground">${relativeDate}</span>
+                    </div>
+                    
+                    <p class="text-muted-foreground text-sm mb-4 line-clamp-3">
+                        ${escapeHtml(dream.description)}
+                    </p>
+                    
+                    <div class="mb-4">
+                        <h4 class="text-sm font-medium text-card-foreground mb-2">Jungian Interpretation:</h4>
+                        <p class="text-xs text-muted-foreground line-clamp-2">
+                            ${escapeHtml(dream.interpretation)}
+                        </p>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        ${(dream.tags || []).map(tag => `
+                            <span class="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">${escapeHtml(tag)}</span>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-muted-foreground">Tokens Earned: ${dream.tokensEarned || 0}</span>
+                        <div class="flex items-center space-x-1">
+                            <svg class="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.719c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                            </svg>
+                            <span class="text-xs font-medium text-accent">+${dream.tokensEarned || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createTimelineItem(dream) {
+            const date = dream.dateCreated?.toDate ? dream.dateCreated.toDate() : new Date(dream.dateCreated);
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthAbbr = monthNames[date.getMonth()];
+            
+            return `
+                <div class="flex space-x-4" data-testid="timeline-dream-${dream.id}">
+                    <div class="flex-shrink-0 w-10 h-10 bg-primary rounded-full flex items-center justify-center">
+                        <span class="text-primary-foreground text-sm font-medium">${monthAbbr}</span>
+                    </div>
+                    <div class="flex-1 bg-card rounded-lg border border-border p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-semibold text-card-foreground">${escapeHtml(dream.title)}</h3>
+                            <span class="text-xs text-muted-foreground">${date.toLocaleDateString()}</span>
+                        </div>
+                        <p class="text-muted-foreground text-sm mb-3">
+                            ${escapeHtml(dream.description)}
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            ${(dream.tags || []).map(tag => `
+                                <span class="px-2 py-1 bg-primary/10 text-primary rounded-full text-xs">${escapeHtml(tag)}</span>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getRelativeDate(date) {
+            const now = new Date();
+            const diffTime = Math.abs(now - date);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return `${diffDays} days ago`;
+            if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+            return date.toLocaleDateString();
+        }
+
+        function updateSubconsciousMap() {
+            // Calculate tag frequencies
+            const tagCounts = {};
+            dreams.forEach(dream => {
+                dream.tags?.forEach(tag => {
+                    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                });
+            });
+
+            const sortedTags = Object.entries(tagCounts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 5); // Top 5 themes
+
+            // Update themes chart
+            const themesChart = document.getElementById('themesChart');
+            const noThemes = document.getElementById('noThemes');
+            
+            if (sortedTags.length === 0) {
+                themesChart.innerHTML = '';
+                noThemes.classList.remove('hidden');
+            } else {
+                noThemes.classList.add('hidden');
+                const maxCount = Math.max(...sortedTags.map(([,count]) => count));
+                
+                themesChart.innerHTML = sortedTags.map(([tag, count]) => `
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-muted-foreground capitalize">${escapeHtml(tag)}</span>
+                        <div class="flex-1 mx-3 bg-muted rounded-full h-2">
+                            <div class="bg-primary h-2 rounded-full" style="width: ${(count / maxCount) * 100}%"></div>
+                        </div>
+                        <span class="text-sm font-medium text-foreground">${count}</span>
+                    </div>
+                `).join('');
+            }
+
+            // Update archetype chart
+            updateArchetypeChart(sortedTags);
+
+            // Update badges
+            updateBadgeDisplay();
+        }
+
+        function updateArchetypeChart(sortedTags) {
+            const canvas = document.getElementById('archetypeChart');
+            const noArchetypes = document.getElementById('noArchetypes');
+            
+            if (sortedTags.length === 0) {
+                if (archetypeChart) {
+                    archetypeChart.destroy();
+                    archetypeChart = null;
+                }
+                canvas.classList.add('hidden');
+                noArchetypes.classList.remove('hidden');
+                return;
+            }
+
+            canvas.classList.remove('hidden');
+            noArchetypes.classList.add('hidden');
+
+            const labels = sortedTags.map(([tag]) => tag);
+            const data = sortedTags.map(([, count]) => count);
+            const colors = [
+                'hsl(210, 100%, 50%)',
+                'hsl(25, 95%, 60%)',
+                'hsl(215.4, 16.3%, 46.9%)',
+                'hsl(210, 40%, 96%)',
+                'hsl(222.2, 47.4%, 11.2%)'
+            ];
+
+            if (archetypeChart) {
+                archetypeChart.data.labels = labels;
+                archetypeChart.data.datasets[0].data = data;
+                archetypeChart.data.datasets[0].backgroundColor = colors.slice(0, labels.length);
+                archetypeChart.update();
+            } else {
+                archetypeChart = new Chart(canvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: colors.slice(0, labels.length),
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateBadgeDisplay() {
+            const badgeGrid = document.getElementById('badgeGrid');
+            const noBadges = document.getElementById('noBadges');
+            const badges = userProfile?.badges || [];
+
+            if (badges.length === 0) {
+                badgeGrid.innerHTML = '';
+                noBadges.classList.remove('hidden');
+                return;
+            }
+
+            noBadges.classList.add('hidden');
+
+            // Count occurrences of each tag to show progress
+            const tagCounts = {};
+            dreams.forEach(dream => {
+                dream.tags?.forEach(tag => {
+                    tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                });
+            });
+
+            badgeGrid.innerHTML = badges.map(badge => {
+                const count = tagCounts[badge] || 0;
+                const badgeColor = getBadgeColor(badge);
+                
+                return `
+                    <div class="text-center p-3 ${badgeColor.bg} rounded-lg border ${badgeColor.border} ${count >= 5 ? 'badge-glow' : ''}" data-testid="badge-${badge}">
+                        <div class="w-12 h-12 ${badgeColor.icon} rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span class="text-primary-foreground font-bold">${badge.charAt(0).toUpperCase()}</span>
+                        </div>
+                        <div class="text-xs font-medium ${badgeColor.text}">${getBadgeName(badge)}</div>
+                        <div class="text-xs text-muted-foreground">${count}/3 dreams</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getBadgeColor(badge) {
+            const colors = {
+                flight: { bg: 'bg-primary/10', border: 'border-primary/20', icon: 'bg-primary', text: 'text-primary' },
+                water: { bg: 'bg-blue-100', border: 'border-blue-200', icon: 'bg-blue-500', text: 'text-blue-600' },
+                shadow: { bg: 'bg-gray-100', border: 'border-gray-200', icon: 'bg-gray-500', text: 'text-gray-600' },
+                fire: { bg: 'bg-red-100', border: 'border-red-200', icon: 'bg-red-500', text: 'text-red-600' },
+                earth: { bg: 'bg-green-100', border: 'border-green-200', icon: 'bg-green-500', text: 'text-green-600' }
+            };
+            return colors[badge] || { bg: 'bg-accent/10', border: 'border-accent/20', icon: 'bg-accent', text: 'text-accent' };
+        }
+
+        function getBadgeName(badge) {
+            const names = {
+                flight: 'Flight Master',
+                water: 'Water Explorer',
+                shadow: 'Shadow Seeker',
+                fire: 'Fire Walker',
+                earth: 'Earth Guardian',
+                transformation: 'Transformer',
+                death: 'Death Sage',
+                rebirth: 'Renewal Guide'
+            };
+            return names[badge] || badge.charAt(0).toUpperCase() + badge.slice(1) + ' Seeker';
+        }
+
+        function populateArchetypeFilter() {
+            const filter = document.getElementById('filterArchetype');
+            const allTags = new Set();
+            
+            dreams.forEach(dream => {
+                dream.tags?.forEach(tag => allTags.add(tag));
+            });
+
+            // Clear existing options except "All Archetypes"
+            const options = Array.from(filter.options);
+            options.slice(1).forEach(option => option.remove());
+
+            // Add tag options
+            Array.from(allTags).sort().forEach(tag => {
+                const option = document.createElement('option');
+                option.value = tag;
+                option.textContent = tag.charAt(0).toUpperCase() + tag.slice(1);
+                filter.appendChild(option);
+            });
+        }
+
+        function filterDreams() {
+            const searchTerm = document.getElementById('searchDreams').value.toLowerCase();
+            const selectedArchetype = document.getElementById('filterArchetype').value;
+
+            let filteredDreams = dreams.filter(dream => {
+                const matchesSearch = !searchTerm || 
+                    dream.title.toLowerCase().includes(searchTerm) ||
+                    dream.description.toLowerCase().includes(searchTerm) ||
+                    dream.tags?.some(tag => tag.toLowerCase().includes(searchTerm));
+
+                const matchesArchetype = !selectedArchetype || 
+                    dream.tags?.includes(selectedArchetype);
+
+                return matchesSearch && matchesArchetype;
+            });
+
+            renderFilteredDreams(filteredDreams);
+        }
+
+        function renderFilteredDreams(filteredDreams) {
+            const gridContainer = document.getElementById('dreamsGrid');
+            const timelineContainer = document.getElementById('dreamsTimeline');
+
+            if (filteredDreams.length === 0) {
+                const noResults = '<div class="col-span-full text-center py-16"><p class="text-muted-foreground">No dreams match your search criteria.</p></div>';
+                gridContainer.innerHTML = noResults;
+                timelineContainer.innerHTML = noResults;
+                return;
+            }
+
+            gridContainer.innerHTML = filteredDreams.map(dream => createDreamCard(dream)).join('');
+            timelineContainer.innerHTML = filteredDreams.map(dream => createTimelineItem(dream)).join('');
+        }
+
+        // Offline support functions
+        function saveDraftToLocal(title, description) {
+            localStorage.setItem('dreamDraft', JSON.stringify({
+                title,
+                description,
+                timestamp: Date.now()
+            }));
+        }
+
+        function loadDraftFromLocal() {
+            try {
+                const draft = localStorage.getItem('dreamDraft');
+                if (draft) {
+                    const { title, description, timestamp } = JSON.parse(draft);
+                    // Only load draft if it's less than 24 hours old
+                    if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+                        const titleInput = document.getElementById('dreamTitle');
+                        const descriptionInput = document.getElementById('dreamDescription');
+                        if (titleInput && descriptionInput) {
+                            titleInput.value = title;
+                            descriptionInput.value = description;
+                        }
+                    } else {
+                        localStorage.removeItem('dreamDraft');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading draft:', error);
+                localStorage.removeItem('dreamDraft');
+            }
+        }
+    </script>
+</body>
+</html>
