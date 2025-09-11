@@ -5,16 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DreamHack - Capture, Decode & Collect Your Dreams</title>
     
-    <!-- SEO Meta Tags -->
     <meta name="description" content="Transform dreams into collectible insights with Jungian interpretation, archetype mapping, and gamified progress tracking. Your subconscious, tracked.">
     <meta property="og:title" content="DreamHack - Capture, Decode & Collect Your Dreams">
     <meta property="og:description" content="Transform dreams into collectible insights with Jungian interpretation, archetype mapping, and gamified progress tracking.">
     <meta property="og:type" content="website">
     
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -64,10 +61,8 @@
       };
     </script>
     
-    <!-- Chart.js for Subconscious Map -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Firebase SDK -->
     <script type="module">
       // Import the functions you need from the SDKs you need
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js'
@@ -94,8 +89,9 @@
       window.db = db;
       window.firebaseAuth = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged };
       window.firestore = { collection, addDoc, query, where, orderBy, getDocs, doc, setDoc, getDoc, updateDoc, increment, writeBatch };
-      // Set Gemini API key - configured
+      // Set API keys - configured
       window.GEMINI_API_KEY = 'AIzaSyBPfXUNrWWWJoOR42_5Kw21iIe5ju-l_Us';
+      window.OPENAI_API_KEY = 'sk-proj-SB9iFQNQKRgFG4FGU7jxT3BlbkFJKZGjyLf4z1nKvTlR3X4H'; // For DALL-E image generation
     </script>
     <style>
       :root {
@@ -235,7 +231,19 @@
     </style>
 </head>
 <body class="min-h-screen bg-background">
-    <!-- Floating Particles Background -->
+    <div id="welcomeModal" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+        <div class="modal-content rounded-lg p-8 max-w-md mx-4 text-center">
+            <h3 class="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">This Isn't a Wrapper</h3>
+            <p class="text-gray-300 mb-6 leading-relaxed">
+                DreamHack is a fully native, single-file application built from scratch. We use real AI-powered dream interpretation with Jungian analysis, Firebase authentication, and visual dream generation. 
+                <br><br>
+                Every feature is purpose-built for dream tracking, not wrapped around existing platforms. Your dreams deserve authentic, dedicated technology.
+            </p>
+            <button id="closeWelcomeModal" class="px-6 py-3 clean-gradient text-white rounded-lg font-semibold hover:opacity-90 transition-opacity">
+                Got it!
+            </button>
+        </div>
+    </div>
     <div class="floating-particles">
         <div class="particle" style="width: 3px; height: 3px; left: 10%; top: 20%; animation-delay: 0s;"></div>
         <div class="particle" style="width: 4px; height: 4px; left: 20%; top: 60%; animation-delay: 2s;"></div>
@@ -244,7 +252,6 @@
         <div class="particle" style="width: 3px; height: 3px; left: 30%; top: 80%; animation-delay: 3s;"></div>
         <div class="particle" style="width: 4px; height: 4px; left: 70%; top: 10%; animation-delay: 5s;"></div>
     </div>
-    <!-- Navigation -->
     <nav class="glass-card border-0 shadow-lg relative z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
@@ -277,10 +284,57 @@
             </div>
         </div>
     </nav>
-    <!-- Main App Container -->
+    <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center modal-backdrop hidden">
+        <div class="modal-content rounded-lg p-8 max-w-md mx-4">
+            <div id="loginForm">
+                <h3 class="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Welcome Back</h3>
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                        <input type="email" id="loginEmail" required class="w-full px-4 py-3 glass-card rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="your@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                        <input type="password" id="loginPassword" required class="w-full px-4 py-3 glass-card rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="••••••••">
+                    </div>
+                    <button type="submit" id="loginSubmit" class="w-full py-3 clean-gradient text-white rounded-lg font-semibold hover:opacity-90 transition-opacity">
+                        Sign In
+                    </button>
+                </form>
+                <p class="text-center text-gray-400 mt-4">
+                    Don't have an account? 
+                    <button id="showSignup" class="text-blue-400 hover:text-blue-300 font-medium">Sign up here</button>
+                </p>
+            </div>
+            <div id="signupForm" class="hidden">
+                <h3 class="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Create Account</h3>
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                        <input type="email" id="signupEmail" required class="w-full px-4 py-3 glass-card rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="your@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                        <input type="password" id="signupPassword" required class="w-full px-4 py-3 glass-card rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="••••••••">
+                    </div>
+                    <button type="submit" id="signupSubmit" class="w-full py-3 clean-gradient text-white rounded-lg font-semibold hover:opacity-90 transition-opacity">
+                        Create Account
+                    </button>
+                </form>
+                <p class="text-center text-gray-400 mt-4">
+                    Already have an account? 
+                    <button id="showLogin" class="text-blue-400 hover:text-blue-300 font-medium">Sign in here</button>
+                </p>
+            </div>
+            <button id="closeAuthModal" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
     <div id="appContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
-        <!-- Landing/Welcome Section -->
         <div id="welcomeSection" class="text-center py-20">
             <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
                 <span class="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
@@ -303,9 +357,7 @@
                 </p>
             </div>
         </div>
-        <!-- Main Dashboard -->
         <div id="dashboardSection" class="hidden">
-            <!-- Tab Navigation -->
             <div class="glass-card rounded-xl p-2 mb-8">
                 <nav class="flex space-x-2">
                     <button data-tab="journal" data-testid="tab-journal" class="tab-btn flex-1 py-3 px-6 rounded-lg font-semibold transition-all duration-200 clean-gradient text-white shadow-lg">
@@ -319,9 +371,7 @@
                     </button>
                 </nav>
             </div>
-            <!-- Dream Journal Tab -->
             <div id="journalTab" class="tab-content">
-                <!-- Journal Controls -->
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                     <div class="flex items-center space-x-4">
                         <h2 class="text-2xl font-bold text-foreground">Dream Journal</h2>
@@ -349,15 +399,10 @@
                         </select>
                     </div>
                 </div>
-                <!-- Dreams Grid View -->
                 <div id="dreamsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Dreams will be populated here -->
-                </div>
-                <!-- Dreams Timeline View -->
+                    </div>
                 <div id="dreamsTimeline" class="hidden space-y-6">
-                    <!-- Timeline items will be populated here -->
-                </div>
-                <!-- Empty State -->
+                    </div>
                 <div id="emptyState" class="text-center py-16 hidden">
                     <div class="w-16 h-16 bg-muted/30 rounded-full flex items-center justify-center mx-auto mb-4">
                         <svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -371,7 +416,6 @@
                     </button>
                 </div>
             </div>
-            <!-- Log Dream Tab -->
             <div id="logTab" class="tab-content hidden">
                 <div class="max-w-2xl mx-auto">
                     <h2 class="text-2xl font-bold text-foreground mb-6">Log New Dream</h2>
@@ -404,9 +448,23 @@
                         </button>
                     </form>
                     
-                    <!-- Dream Analysis Result -->
                     <div id="dreamAnalysis" class="hidden mt-8 space-y-6">
-                        <!-- Jungian Analysis Section -->
+                        <div id="dreamVisual" class="glass-card p-6 rounded-lg hidden">
+                            <div class="flex items-center space-x-3 mb-4">
+                                <div class="w-8 h-8 bg-gradient-to-r from-pink-500 to-orange-500 rounded-lg flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                            
+                            </div>
+                            <div id="dreamImageContainer" class="text-center">
+                                <div id="imageSpinner" class="py-8">
+                                    <div class="loading-spinner mx-auto mb-4"></div>
+                                    <p class="text-gray-400">Generating visual interpretation...</p>
+                                </div>
+                            </div>
+                        </div>
                         <div class="glass-card p-6 rounded-lg">
                             <div class="flex items-center space-x-3 mb-4">
                                 <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg flex items-center justify-center">
@@ -417,11 +475,9 @@
                                 <h3 class="text-xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">Jungian Analysis</h3>
                             </div>
                             <div id="analysisContent" class="space-y-4 text-gray-200">
-                                <!-- Analysis content will be populated here -->
-                            </div>
+                                </div>
                         </div>
                         
-                        <!-- Real Life Insights Section -->
                         <div class="glass-card p-6 rounded-lg">
                             <div class="flex items-center space-x-3 mb-4">
                                 <div class="w-8 h-8 bg-gradient-to-r from-orange-500 to-pink-500 rounded-lg flex items-center justify-center">
@@ -432,26 +488,22 @@
                                 <h3 class="text-xl font-bold bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent">Real Life Insights</h3>
                             </div>
                             <div id="insightsContent" class="space-y-4 text-gray-200">
-                                <!-- Insights content will be populated here -->
-                            </div>
+                                </div>
                         </div>
                         
                         <button id="saveDreamBtn" data-testid="button-save-dream" class="w-full py-4 clean-gradient text-white rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
                             Save to Dream Journal
                         </button>
                     </div>
-                    <!-- Error Message -->
                     <div id="analysisError" class="hidden mt-4 p-3 error-message rounded-lg">
                         <p class="text-sm"></p>
                     </div>
                 </div>
             </div>
-            <!-- Profile Tab -->
             <div id="profileTab" class="tab-content hidden">
                 <div class="max-w-6xl mx-auto">
                     <h2 class="text-2xl font-bold text-foreground mb-8">Profile Dashboard</h2>
                     
-                    <!-- Stats Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                         <div class="glass-card rounded-lg p-6 text-center">
                             <div class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2" data-testid="stat-total-dreams" data-bind="user.totalDreams">0</div>
@@ -473,7 +525,6 @@
                             <div class="text-sm text-gray-300">🏆 Badges Earned</div>
                         </div>
                     </div>
-                    <!-- Mental Wellness Section -->
                     <div class="mb-8">
                         <div class="glass-card rounded-lg p-6">
                             <div class="flex items-center justify-between mb-6">
@@ -500,37 +551,41 @@
                         </div>
                     </div>
                     
-                    <!-- Badges Section -->
                     <div class="glass-card rounded-lg p-6 mb-8">
                         <h3 class="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-4 flex items-center space-x-2">
                             <span>🏆</span>
                             <span>Archetype Badges</span>
                         </h3>
-                        <div id="badgesList" class="flex flex-wrap gap-3">
-                            <div class="text-gray-400 text-sm">No badges earned yet. Start logging dreams to discover your archetypes!</div>
+                        <div id="badgesGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            </div>
+                        <div id="noBadges" class="text-center py-8 text-gray-400">
+                            <p>No badges earned yet.</p>
+                            <p class="text-sm mt-1">Dream about the same archetype 3 times to unlock a badge!</p>
                         </div>
                     </div>
                     
-                    <!-- Subconscious Map -->
                     <div class="glass-card rounded-lg p-6">
                         <h3 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4 flex items-center space-x-2">
                             <span>🧠</span>
                             <span>Subconscious Map</span>
                         </h3>
                         <div id="themesChart" class="space-y-3">
-                            <!-- Theme bars will be populated here -->
+                            </div>
+                        <div id="noThemes" class="text-center py-8 text-gray-400">
+                            <p>No themes detected yet.</p>
+                            <p class="text-sm mt-1">Log more dreams to discover recurring patterns in your subconscious.</p>
                         </div>
-                        <div id="noThemes" class="text-gray-400 text-sm">
-                            Log more dreams to see your recurring themes and patterns.
-                        </div>
-                        
-                        <!-- Privacy Toggle -->
-                        <div class="mt-6 pt-4 border-t border-gray-700">
-                            <label class="flex items-center space-x-3 cursor-pointer">
-                                <input type="checkbox" id="shareToggle" data-testid="toggle-share" class="w-4 h-4 text-primary bg-gray-700 border-gray-600 rounded focus:ring-primary focus:ring-2">
-                                <span class="text-sm text-gray-300">
-                                    Share anonymized pattern data to help improve insights
-                                </span>
+                    </div>
+                    <div class="mt-8 glass-card rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-foreground mb-4">Privacy Settings</h3>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-foreground">Share Anonymous Data</p>
+                                <p class="text-xs text-muted-foreground">Help improve dream analysis by sharing anonymized patterns</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="shareDataToggle" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                             </label>
                         </div>
                     </div>
@@ -538,325 +593,165 @@
             </div>
         </div>
     </div>
-    <!-- Authentication Modals -->
-    <!-- Sign Up Modal -->
-    <div id="signupModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="modal-backdrop fixed inset-0" onclick="closeModal('signupModal')"></div>
-            <div class="modal-content relative max-w-md w-full mx-auto rounded-xl p-8">
-                <button onclick="closeModal('signupModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-                
-                <div class="text-center mb-8">
-                    <div class="w-12 h-12 clean-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
-                        <span class="text-white font-bold text-xl">D</span>
-                    </div>
-                    <h2 class="text-2xl font-bold text-white mb-2">Create Your Account</h2>
-                    <p class="text-gray-400">Start your dream tracking journey</p>
-                </div>
-                <form id="signupForm" class="space-y-4">
-                    <div>
-                        <label for="signupEmail" class="block text-sm font-medium text-gray-300 mb-2">Email</label>
-                        <input type="email" id="signupEmail" data-testid="input-signup-email" required
-                               class="w-full px-4 py-3 glass-card rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
-                               placeholder="Enter your email">
-                    </div>
-                    <div>
-                        <label for="signupPassword" class="block text-sm font-medium text-gray-300 mb-2">Password</label>
-                        <input type="password" id="signupPassword" data-testid="input-signup-password" required
-                               class="w-full px-4 py-3 glass-card rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
-                               placeholder="Choose a strong password">
-                    </div>
-                    
-                    <button type="submit" data-testid="button-create-account" 
-                            class="w-full py-3 clean-gradient text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
-                        Create Account
-                    </button>
-                </form>
-                
-                <div class="mt-6 text-center">
-                    <p class="text-gray-400 text-sm">Already have an account? 
-                        <button onclick="switchModal('signupModal', 'loginModal')" class="text-blue-400 hover:text-blue-300 font-medium">Sign in</button>
-                    </p>
-                </div>
-                <div id="signupError" class="hidden mt-4 p-3 error-message rounded-lg">
-                    <p class="text-sm"></p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Login Modal -->
-    <div id="loginModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="modal-backdrop fixed inset-0" onclick="closeModal('loginModal')"></div>
-            <div class="modal-content relative max-w-md w-full mx-auto rounded-xl p-8">
-                <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-gray-400 hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-                
-                <div class="text-center mb-8">
-                    <div class="w-12 h-12 clean-gradient rounded-lg flex items-center justify-center mx-auto mb-4">
-                        <span class="text-white font-bold text-xl">D</span>
-                    </div>
-                    <h2 class="text-2xl font-bold text-white mb-2">Welcome Back</h2>
-                    <p class="text-gray-400">Sign in to continue your journey</p>
-                </div>
-                <form id="loginForm" class="space-y-4">
-                    <div>
-                        <label for="loginEmail" class="block text-sm font-medium text-gray-300 mb-2">Email</label>
-                        <input type="email" id="loginEmail" data-testid="input-login-email" required
-                               class="w-full px-4 py-3 glass-card rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
-                               placeholder="Enter your email">
-                    </div>
-                    <div>
-                        <label for="loginPassword" class="block text-sm font-medium text-gray-300 mb-2">Password</label>
-                        <input type="password" id="loginPassword" data-testid="input-login-password" required
-                               class="w-full px-4 py-3 glass-card rounded-lg text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200"
-                               placeholder="Enter your password">
-                    </div>
-                    
-                    <button type="submit" data-testid="button-sign-in" 
-                            class="w-full py-3 clean-gradient text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
-                        Sign In
-                    </button>
-                </form>
-                
-                <div class="mt-6 text-center">
-                    <p class="text-gray-400 text-sm">Don't have an account? 
-                        <button onclick="switchModal('loginModal', 'signupModal')" class="text-blue-400 hover:text-blue-300 font-medium">Sign up</button>
-                    </p>
-                </div>
-                <div id="loginError" class="hidden mt-4 p-3 error-message rounded-lg">
-                    <p class="text-sm"></p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Success Toast -->
-    <div id="successToast" class="fixed top-4 right-4 z-50 success-message p-4 rounded-lg shadow-lg transform translate-x-full opacity-0 transition-all duration-300">
-        <div class="flex items-center space-x-2">
-            <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-            </svg>
-            <span id="successMessage" class="font-medium"></span>
-        </div>
-    </div>
-    <!-- Onboarding Modal -->
-    <div id="onboardingModal" class="fixed inset-0 z-50 overflow-y-auto">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="modal-backdrop fixed inset-0"></div>
-            <div class="modal-content relative max-w-lg w-full mx-auto rounded-xl p-8 text-center">
-                <div class="w-16 h-16 clean-gradient rounded-full flex items-center justify-center mx-auto mb-6">
-                    <span class="text-white font-bold text-2xl">D</span>
-                </div>
-                
-                <h2 class="text-3xl font-bold text-white mb-4">Welcome to DreamHack!</h2>
-                <p class="text-gray-300 mb-6 leading-relaxed">
-                    Your personal dream analysis companion. Track patterns, discover insights, and explore your subconscious mind with AI-powered interpretation.
-                </p>
-                
-                <div class="space-y-3 text-left mb-8">
-                    <div class="flex items-center space-x-3 text-gray-300">
-                        <span class="text-blue-400">✨</span>
-                        <span>Log and analyze dreams with AI</span>
-                    </div>
-                    <div class="flex items-center space-x-3 text-gray-300">
-                        <span class="text-purple-400">🏆</span>
-                        <span>Earn badges for recurring archetypes</span>
-                    </div>
-                    <div class="flex items-center space-x-3 text-gray-300">
-                        <span class="text-green-400">🧠</span>
-                        <span>Track patterns and mental wellness</span>
-                    </div>
-                    <div class="flex items-center space-x-3 text-gray-300">
-                        <span class="text-orange-400">🔒</span>
-                        <span>Private by default, secure storage</span>
-                    </div>
-                </div>
-                
-                <button onclick="closeOnboarding()" data-testid="button-got-it" 
-                        class="w-full py-3 clean-gradient text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
-                    Got it!
-                </button>
-            </div>
-        </div>
+    <div id="toast" class="fixed bottom-4 right-4 glass-card rounded-lg p-4 text-white shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+        <p id="toastMessage"></p>
     </div>
     <script>
-        // Global state
+        // Global variables
         let currentUser = null;
         let userProfile = null;
         let dreams = [];
-        let currentView = 'cards';
         // Initialize app
-        window.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function() {
             initializeApp();
         });
         function initializeApp() {
-            // Set up auth state listener
-            window.firebaseAuth.onAuthStateChanged(auth, (user) => {
+            // Initialize auth state listener
+            window.firebaseAuth.onAuthStateChanged(window.auth, (user) => {
+                currentUser = user;
                 if (user) {
-                    currentUser = user;
                     showDashboard();
                     loadUserData();
                 } else {
-                    currentUser = null;
                     showWelcome();
                 }
             });
-            // Set up event listeners
+            // Setup event listeners
             setupEventListeners();
-            
-            // Initialize UI
-            updateAuthUI();
         }
         function setupEventListeners() {
-            // Authentication
-            document.getElementById('signupBtn').addEventListener('click', () => openModal('signupModal'));
-            document.getElementById('loginBtn').addEventListener('click', () => openModal('loginModal'));
-            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-            document.getElementById('getStartedBtn').addEventListener('click', () => openModal('signupModal'));
-            document.getElementById('signupForm').addEventListener('submit', handleSignup);
+            // Welcome modal
+            document.getElementById('closeWelcomeModal').addEventListener('click', () => {
+                document.getElementById('welcomeModal').classList.add('hidden');
+            });
+            // Auth buttons
+            document.getElementById('loginBtn').addEventListener('click', () => showAuthModal('login'));
+            document.getElementById('signupBtn').addEventListener('click', () => showAuthModal('signup'));
+            document.getElementById('getStartedBtn').addEventListener('click', () => showAuthModal('signup'));
+            
+            // Auth modal
+            document.getElementById('closeAuthModal').addEventListener('click', hideAuthModal);
+            document.getElementById('showSignup').addEventListener('click', () => showAuthModal('signup'));
+            document.getElementById('showLogin').addEventListener('click', () => showAuthModal('login'));
+            
+            // Auth forms
             document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('signupForm').addEventListener('submit', handleSignup);
+            
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            
             // Dream form
             document.getElementById('dreamForm').addEventListener('submit', handleDreamSubmit);
             document.getElementById('saveDreamBtn').addEventListener('click', saveDreamToFirestore);
-            // Wellness analysis
-            document.getElementById('analyzeWellnessBtn').addEventListener('click', analyzeWellness);
-            // Tab switching
+            
+            // Tab navigation
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => switchTab(e.target.dataset.tab));
+                btn.addEventListener('click', (e) => {
+                    const tab = e.target.getAttribute('data-tab');
+                    switchTab(tab);
+                });
             });
-            // View switching
-            document.getElementById('cardViewBtn').addEventListener('click', () => switchView('cards'));
-            document.getElementById('timelineViewBtn').addEventListener('click', () => switchView('timeline'));
+            
+            // View toggles
+            document.getElementById('cardViewBtn').addEventListener('click', () => toggleView('card'));
+            document.getElementById('timelineViewBtn').addEventListener('click', () => toggleView('timeline'));
+            
             // Search and filter
             document.getElementById('searchDreams').addEventListener('input', filterDreams);
             document.getElementById('filterArchetype').addEventListener('change', filterDreams);
-            // Privacy toggle
-            document.getElementById('shareToggle').addEventListener('change', handlePrivacyToggle);
+            // Wellness analysis
+            document.getElementById('analyzeWellnessBtn').addEventListener('click', analyzeWellness);
         }
-        // Authentication functions
-        async function handleSignup(e) {
-            e.preventDefault();
-            const email = document.getElementById('signupEmail').value.trim();
-            const password = document.getElementById('signupPassword').value;
-            if (password.length < 6) {
-                showError('signupError', 'Password must be at least 6 characters long.');
-                return;
+        function showAuthModal(type) {
+            const modal = document.getElementById('authModal');
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            
+            if (type === 'login') {
+                loginForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+            } else {
+                loginForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
             }
-            try {
-                await window.firebaseAuth.createUserWithEmailAndPassword(auth, email, password);
-                closeModal('signupModal');
-                showSuccessToast('Account created successfully!');
-            } catch (error) {
-                console.error('Signup error:', error);
-                showError('signupError', getAuthErrorMessage(error.code));
-            }
+            
+            modal.classList.remove('hidden');
+        }
+        function hideAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
         }
         async function handleLogin(e) {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
+            const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             try {
-                await window.firebaseAuth.signInWithEmailAndPassword(auth, email, password);
-                closeModal('loginModal');
+                await window.firebaseAuth.signInWithEmailAndPassword(window.auth, email, password);
+                hideAuthModal();
                 showSuccessToast('Welcome back!');
             } catch (error) {
-                console.error('Login error:', error);
-                showError('loginError', getAuthErrorMessage(error.code));
+                showError('login', error.message);
+            }
+        }
+        async function handleSignup(e) {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            try {
+                await window.firebaseAuth.createUserWithEmailAndPassword(window.auth, email, password);
+                hideAuthModal();
+                showSuccessToast('Account created successfully!');
+            } catch (error) {
+                showError('signup', error.message);
             }
         }
         async function handleLogout() {
             try {
-                await window.firebaseAuth.signOut(auth);
+                await window.firebaseAuth.signOut(window.auth);
+                showWelcome();
                 showSuccessToast('Logged out successfully');
             } catch (error) {
                 console.error('Logout error:', error);
             }
         }
-        // Modal functions
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
-            document.body.style.overflow = 'auto';
-            
-            // Clear form errors
-            const errorEl = document.querySelector(`#${modalId} .error-message`);
-            if (errorEl) errorEl.classList.add('hidden');
-        }
-        function switchModal(fromModal, toModal) {
-            closeModal(fromModal);
-            openModal(toModal);
-        }
-        function closeOnboarding() {
-            closeModal('onboardingModal');
-            localStorage.setItem('hasSeenOnboarding', 'true');
-        }
-        // UI state functions
         function showWelcome() {
             document.getElementById('welcomeSection').classList.remove('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
-            updateAuthUI();
-            
-            // Show onboarding for new users
-            if (!localStorage.getItem('hasSeenOnboarding')) {
-                setTimeout(() => openModal('onboardingModal'), 1000);
-            }
+            document.getElementById('authButtons').classList.remove('hidden');
+            document.getElementById('userMenu').classList.add('hidden');
         }
         function showDashboard() {
             document.getElementById('welcomeSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.remove('hidden');
-            updateAuthUI();
-            closeModal('onboardingModal');
-        }
-        function updateAuthUI() {
-            const authButtons = document.getElementById('authButtons');
-            const userMenu = document.getElementById('userMenu');
-            const userEmail = document.getElementById('userEmail');
+            document.getElementById('authButtons').classList.add('hidden');
+            document.getElementById('userMenu').classList.remove('hidden');
+            
             if (currentUser) {
-                authButtons.classList.add('hidden');
-                userMenu.classList.remove('hidden');
-                userEmail.textContent = currentUser.email;
-            } else {
-                authButtons.classList.remove('hidden');
-                userMenu.classList.add('hidden');
+                document.getElementById('userEmail').textContent = currentUser.email;
             }
         }
-        // Tab switching
-        function switchTab(tab) {
-            // Update tab buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                if (btn.dataset.tab === tab) {
-                    btn.classList.remove('text-muted-foreground', 'hover:text-white', 'hover:bg-white/10');
-                    btn.classList.add('clean-gradient', 'text-white', 'shadow-lg');
-                } else {
-                    btn.classList.add('text-muted-foreground', 'hover:text-white', 'hover:bg-white/10');
-                    btn.classList.remove('clean-gradient', 'text-white', 'shadow-lg');
-                }
-            });
-            // Show/hide tab content
+        function switchTab(tabName) {
+            // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
             });
-            document.getElementById(tab + 'Tab').classList.remove('hidden');
-            // Load data if switching to journal
-            if (tab === 'journal') {
-                renderDreams();
-            }
-        }
-        // View switching
-        function switchView(view) {
-            currentView = view;
             
-            if (view === 'cards') {
+            // Remove active state from all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('clean-gradient', 'text-white', 'shadow-lg');
+                btn.classList.add('text-muted-foreground', 'hover:text-white', 'hover:bg-white/10');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + 'Tab').classList.remove('hidden');
+            
+            // Add active state to selected tab button
+            const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+            activeBtn.classList.add('clean-gradient', 'text-white', 'shadow-lg');
+            activeBtn.classList.remove('text-muted-foreground', 'hover:text-white', 'hover:bg-white/10');
+        }
+        function toggleView(viewType) {
+            if (viewType === 'card') {
                 document.getElementById('cardViewBtn').classList.add('bg-white/10', 'text-white', 'shadow-sm');
                 document.getElementById('cardViewBtn').classList.remove('text-muted-foreground');
                 document.getElementById('timelineViewBtn').classList.remove('bg-white/10', 'text-white', 'shadow-sm');
@@ -887,20 +782,77 @@
             document.getElementById('submitDream').disabled = true;
             document.getElementById('analysisError').classList.add('hidden');
             try {
-                const geminiApiKey = window.GEMINI_API_KEY;
+                // Call Gemini API for interpretation
+                const geminiApiKey = window.GEMINI_API_KEY || 'YOUR_GEMINI_API_KEY_HERE';
                 const interpretation = await callGeminiAPI(title, description, geminiApiKey);
+                
+                // Generate dream image
+                generateDreamImage(title, description);
+                
                 displayDreamAnalysis(title, description, interpretation);
             } catch (error) {
                 console.error('Analysis error:', error);
-                showError('analysisError', 'Failed to analyze dream. Please check your connection and try again.');
+                showError('analysisError', 'Failed to analyze dream. Please check your API key configuration and try again.');
             } finally {
                 document.getElementById('dreamSpinner').classList.add('hidden');
                 document.getElementById('submitDream').disabled = false;
             }
         }
+        async function generateDreamImage(title, description) {
+            const openaiApiKey = window.OPENAI_API_KEY;
+            
+            if (!openaiApiKey || openaiApiKey === 'YOUR_OPENAI_API_KEY_HERE') {
+                console.warn('OpenAI API key not configured, skipping image generation');
+                return;
+            }
+            try {
+                // Show image loading
+                document.getElementById('dreamVisual').classList.remove('hidden');
+                document.getElementById('imageSpinner').classList.remove('hidden');
+                // Create visual prompt based on dream
+                const imagePrompt = `Create a surreal, dreamlike artistic interpretation of: "${title}". ${description}. Style: ethereal, mystical, symbolic, with soft lighting and dream-like quality. Avoid text or words in the image.`;
+                const response = await fetch('https://api.openai.com/v1/images/generations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${openaiApiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: "dall-e-3",
+                        prompt: imagePrompt,
+                        n: 1,
+                        size: "1024x1024",
+                        quality: "standard"
+                    })
+                });
+                if (!response.ok) {
+                    throw new Error(`OpenAI API error: ${response.status}`);
+                }
+                const data = await response.json();
+                const imageUrl = data.data[0].url;
+                // Display the generated image
+                document.getElementById('imageSpinner').classList.add('hidden');
+                document.getElementById('dreamImageContainer').innerHTML = `
+                    <img src="${imageUrl}" alt="Visual interpretation of ${escapeHtml(title)}" 
+                         class="w-full max-w-md mx-auto rounded-lg shadow-lg" 
+                         style="max-height: 400px; object-fit: cover;">
+                    <p class="text-sm text-gray-400 mt-3">AI-generated visual interpretation of your dream</p>
+                `;
+                // Store image URL for saving
+                if (window.currentDreamAnalysis) {
+                    window.currentDreamAnalysis.imageUrl = imageUrl;
+                }
+            } catch (error) {
+                console.error('Image generation error:', error);
+                document.getElementById('imageSpinner').classList.add('hidden');
+                document.getElementById('dreamImageContainer').innerHTML = `
+                    
+                `;
+            }
+        }
         async function callGeminiAPI(title, description, apiKey) {
             if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
-                throw new Error('Gemini API key not configured.');
+                throw new Error('Gemini API key not configured. Please replace YOUR_GEMINI_API_KEY_HERE with your actual API key.');
             }
             const prompt = `Analyze the following dream from both psychological and practical perspectives:
 Title: ${title}
@@ -917,14 +869,20 @@ Return the response as JSON in this exact format:
 }`;
             const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' + apiKey, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
                     generationConfig: {
                         temperature: 0.7,
                         topK: 1,
                         topP: 1,
-                        maxOutputTokens: 2048,
+                        maxOutputTokens: 3048,
                     }
                 })
             });
@@ -945,7 +903,7 @@ Return the response as JSON in this exact format:
                     return parsed;
                 }
             } catch (parseError) {
-                console.warn('Could not parse JSON from Gemini response');
+                console.warn('Could not parse JSON from Gemini response, using fallback parsing');
             }
             
             return {
@@ -997,160 +955,6 @@ Return the response as JSON in this exact format:
             window.currentDreamAnalysis = { title, description, analysis };
             document.getElementById('dreamAnalysis').classList.remove('hidden');
         }
-        // Mental Wellness Analysis
-        async function analyzeWellness() {
-            if (dreams.length < 3) {
-                showError('analysisError', 'You need at least 3 dreams for wellness analysis.');
-                return;
-            }
-            const wellnessSpinner = document.getElementById('wellnessSpinner');
-            const wellnessContent = document.getElementById('wellnessContent');
-            const analyzeBtn = document.getElementById('analyzeWellnessBtn');
-            
-            wellnessSpinner.classList.remove('hidden');
-            wellnessContent.classList.add('hidden');
-            analyzeBtn.disabled = true;
-            try {
-                const geminiApiKey = window.GEMINI_API_KEY;
-                const recentDreams = dreams.slice(0, 5); // Last 5 dreams
-                
-                const dreamSummaries = recentDreams.map(dream => 
-                    `Dream: "${dream.title}" - ${dream.description.substring(0, 200)}... Interpretation: ${dream.interpretation.substring(0, 200)}...`
-                ).join('\n\n');
-                const wellnessPrompt = `Analyze the following dreams and their interpretations to provide a mental wellness assessment:
-${dreamSummaries}
-Please provide a mental wellness analysis focusing on:
-1. Overall psychological patterns and themes
-2. Emotional state indicators
-3. Stress or anxiety signals
-4. Positive mental health indicators
-5. Practical recommendations for mental wellness
-Return the response as JSON in this exact format:
-{
-  "overall_state": "positive/neutral/concerning",
-  "summary": "Brief 2-3 sentence summary of mental state",
-  "key_patterns": ["pattern1", "pattern2", "pattern3"],
-  "recommendations": ["recommendation1", "recommendation2", "recommendation3"],
-  "wellness_score": 75
-}`;
-                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' + geminiApiKey, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: wellnessPrompt }] }],
-                        generationConfig: {
-                            temperature: 0.7,
-                            topK: 1,
-                            topP: 1,
-                            maxOutputTokens: 2048,
-                        }
-                    })
-                });
-                if (!response.ok) throw new Error('Failed to analyze wellness');
-                const data = await response.json();
-                const generatedText = data.candidates[0].content.parts[0].text;
-                
-                let wellnessData;
-                try {
-                    const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
-                    if (jsonMatch) {
-                        wellnessData = JSON.parse(jsonMatch[0]);
-                    }
-                } catch (parseError) {
-                    throw new Error('Unable to parse wellness analysis');
-                }
-                displayWellnessAnalysis(wellnessData);
-                
-            } catch (error) {
-                console.error('Wellness analysis error:', error);
-                wellnessContent.innerHTML = `
-                    <div class="text-red-400 text-center py-8">
-                        <p>Unable to analyze wellness patterns. Please try again later.</p>
-                    </div>
-                `;
-                wellnessContent.classList.remove('hidden');
-            } finally {
-                wellnessSpinner.classList.add('hidden');
-                analyzeBtn.disabled = false;
-            }
-        }
-        function displayWellnessAnalysis(data) {
-            const wellnessContent = document.getElementById('wellnessContent');
-            
-            let cardClass, iconColor, stateIcon;
-            switch(data.overall_state) {
-                case 'positive':
-                    cardClass = 'wellness-card';
-                    iconColor = 'text-green-400';
-                    stateIcon = '😊';
-                    break;
-                case 'concerning':
-                    cardClass = 'wellness-warning';
-                    iconColor = 'text-red-400';
-                    stateIcon = '😰';
-                    break;
-                default:
-                    cardClass = 'wellness-neutral';
-                    iconColor = 'text-blue-400';
-                    stateIcon = '😐';
-            }
-            wellnessContent.innerHTML = `
-                <div class="${cardClass} rounded-lg p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center space-x-3">
-                            <span class="text-2xl">${stateIcon}</span>
-                            <div>
-                                <h4 class="font-bold ${iconColor}">Mental Wellness Score</h4>
-                                <p class="text-sm text-gray-300">Based on your last ${Math.min(dreams.length, 5)} dreams</p>
-                            </div>
-                        </div>
-                        <div class="text-3xl font-bold ${iconColor}">${data.wellness_score || 'N/A'}</div>
-                    </div>
-                    
-                    <p class="text-gray-200 mb-6 leading-relaxed">${escapeHtml(data.summary || 'Unable to generate summary')}</p>
-                    
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <h5 class="font-semibold text-white mb-3 flex items-center space-x-2">
-                                <span>🔍</span>
-                                <span>Key Patterns</span>
-                            </h5>
-                            <ul class="space-y-2">
-                                ${(data.key_patterns || ['No patterns identified']).map(pattern => `
-                                    <li class="text-gray-300 text-sm flex items-start space-x-2">
-                                        <span class="text-blue-400 mt-1">•</span>
-                                        <span>${escapeHtml(pattern)}</span>
-                                    </li>
-                                `).join('')}
-                            </ul>
-                        </div>
-                        
-                        <div>
-                            <h5 class="font-semibold text-white mb-3 flex items-center space-x-2">
-                                <span>💡</span>
-                                <span>Recommendations</span>
-                            </h5>
-                            <ul class="space-y-2">
-                                ${(data.recommendations || ['Consider keeping a regular sleep schedule']).map(rec => `
-                                    <li class="text-gray-300 text-sm flex items-start space-x-2">
-                                        <span class="text-green-400 mt-1">•</span>
-                                        <span>${escapeHtml(rec)}</span>
-                                    </li>
-                                `).join('')}
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6 pt-4 border-t border-gray-600">
-                        <p class="text-gray-400 text-xs text-center">
-                            This analysis is for informational purposes only. For professional mental health support, consult a qualified therapist.
-                        </p>
-                    </div>
-                </div>
-            `;
-            
-            wellnessContent.classList.remove('hidden');
-        }
         function escapeHtml(text) {
             const map = {
                 '&': '&amp;',
@@ -1169,14 +973,17 @@ Return the response as JSON in this exact format:
                     title: window.currentDreamAnalysis.title,
                     description: window.currentDreamAnalysis.description,
                     interpretation: window.currentDreamAnalysis.analysis.interpretation,
+                    insights: window.currentDreamAnalysis.analysis.insights,
                     tags: window.currentDreamAnalysis.analysis.tags,
+                    imageUrl: window.currentDreamAnalysis.imageUrl || null,
                     dateCreated: new Date(),
                     tokensEarned: 5
                 };
-                await window.firestore.addDoc(window.firestore.collection(db, `users/${currentUser.uid}/dreams`), dreamData);
+                await window.firestore.addDoc(window.firestore.collection(window.db, `users/${currentUser.uid}/dreams`), dreamData);
                 await updateUserStats(dreamData.tokensEarned, dreamData.tags);
                 document.getElementById('dreamForm').reset();
                 document.getElementById('dreamAnalysis').classList.add('hidden');
+                document.getElementById('dreamVisual').classList.add('hidden');
                 window.currentDreamAnalysis = null;
                 switchTab('journal');
                 await loadUserData();
@@ -1190,7 +997,7 @@ Return the response as JSON in this exact format:
         async function updateUserStats(tokensEarned, tags) {
             if (!currentUser) return;
             try {
-                const userRef = window.firestore.doc(db, 'users', currentUser.uid);
+                const userRef = window.firestore.doc(window.db, 'users', currentUser.uid);
                 const now = new Date();
                 const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                 
@@ -1217,6 +1024,7 @@ Return the response as JSON in this exact format:
                     lastDreamDate: now
                 });
                 await updateBadges(userRef, tags);
+                
                 if (userData.shareAnonymized) {
                     await updateGlobalTagCounts(tags);
                 }
@@ -1259,10 +1067,10 @@ Return the response as JSON in this exact format:
         }
         async function updateGlobalTagCounts(tags) {
             try {
-                const batch = window.firestore.writeBatch(db);
+                const batch = window.firestore.writeBatch(window.db);
                 
                 tags.forEach(tag => {
-                    const tagRef = window.firestore.doc(db, 'globalTagCounts', tag);
+                    const tagRef = window.firestore.doc(window.db, 'globalTagCounts', tag);
                     batch.set(tagRef, {
                         count: window.firestore.increment(1)
                     }, { merge: true });
@@ -1275,7 +1083,7 @@ Return the response as JSON in this exact format:
         async function loadUserData() {
             if (!currentUser) return;
             try {
-                const userDoc = await window.firestore.getDoc(window.firestore.doc(db, 'users', currentUser.uid));
+                const userDoc = await window.firestore.getDoc(window.firestore.doc(window.db, 'users', currentUser.uid));
                 if (userDoc.exists()) {
                     userProfile = userDoc.data();
                 } else {
@@ -1289,10 +1097,10 @@ Return the response as JSON in this exact format:
                         createdAt: new Date(),
                         lastDreamDate: null
                     };
-                    await window.firestore.setDoc(window.firestore.doc(db, 'users', currentUser.uid), userProfile);
+                    await window.firestore.setDoc(window.firestore.doc(window.db, 'users', currentUser.uid), userProfile);
                 }
                 const dreamsQuery = window.firestore.query(
-                    window.firestore.collection(db, `users/${currentUser.uid}/dreams`),
+                    window.firestore.collection(window.db, `users/${currentUser.uid}/dreams`),
                     window.firestore.orderBy('dateCreated', 'desc')
                 );
                 const dreamSnapshot = await window.firestore.getDocs(dreamsQuery);
@@ -1316,19 +1124,6 @@ Return the response as JSON in this exact format:
             if (currentStreakEl) currentStreakEl.textContent = userProfile.currentStreak || 0;
             if (totalTokensEl) totalTokensEl.textContent = userProfile.totalTokens || 0;
             if (badgeCountEl) badgeCountEl.textContent = (userProfile.badges || []).length;
-            // Update badges display
-            const badgesList = document.getElementById('badgesList');
-            const badges = userProfile.badges || [];
-            
-            if (badges.length === 0) {
-                badgesList.innerHTML = '<div class="text-gray-400 text-sm">No badges earned yet. Start logging dreams to discover your archetypes!</div>';
-            } else {
-                badgesList.innerHTML = badges.map(badge => `
-                    <span class="px-3 py-2 badge-gradient text-purple-200 rounded-full text-sm font-medium shadow-lg capitalize">
-                        🏆 ${escapeHtml(badge)}
-                    </span>
-                `).join('');
-            }
         }
         function renderDreams() {
             const gridContainer = document.getElementById('dreamsGrid');
@@ -1348,6 +1143,12 @@ Return the response as JSON in this exact format:
             const date = dream.dateCreated?.toDate ? dream.dateCreated.toDate() : new Date(dream.dateCreated);
             const relativeDate = getRelativeDate(date);
             
+            const imageSection = dream.imageUrl ? `
+                <div class="mb-4">
+                    <img src="${dream.imageUrl}" alt="Visual interpretation" class="w-full h-40 object-cover rounded-lg">
+                </div>
+            ` : '';
+            
             return `
                 <div class="dream-card glass-card rounded-lg p-6 cursor-pointer" data-testid="card-dream-${dream.id}">
                     <div class="flex justify-between items-start mb-3">
@@ -1355,13 +1156,15 @@ Return the response as JSON in this exact format:
                         <span class="text-xs text-gray-400">${relativeDate}</span>
                     </div>
                     
+                    ${imageSection}
+                    
                     <p class="text-gray-300 text-sm mb-4 line-clamp-3">
                         ${escapeHtml(dream.description)}
                     </p>
                     
                     <div class="mb-4">
                         <h4 class="text-sm font-medium text-white mb-2">Jungian Interpretation:</h4>
-                        <p class="text-xs text-gray-300 line-clamp-2">
+                        <p class="text-xs text-gray-400 line-clamp-2">
                             ${escapeHtml(dream.interpretation)}
                         </p>
                     </div>
@@ -1386,7 +1189,8 @@ Return the response as JSON in this exact format:
         }
         function createTimelineItem(dream) {
             const date = dream.dateCreated?.toDate ? dream.dateCreated.toDate() : new Date(dream.dateCreated);
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const monthAbbr = monthNames[date.getMonth()];
             
             return `
@@ -1444,13 +1248,29 @@ Return the response as JSON in this exact format:
                 themesChart.innerHTML = sortedTags.map(([tag, count]) => `
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-300 capitalize">${escapeHtml(tag)}</span>
-                        <div class="flex items-center space-x-2 flex-1 ml-4">
-                            <div class="flex-1 bg-gray-700 rounded-full h-2 overflow-hidden">
-                                <div class="h-full clean-gradient rounded-full transition-all duration-300" 
-                                     style="width: ${(count / maxCount) * 100}%"></div>
+                        <div class="flex items-center space-x-2">
+                            <div class="bg-gray-700 rounded-full h-2 w-24">
+                                <div class="clean-gradient h-2 rounded-full" style="width: ${(count / maxCount) * 100}%"></div>
                             </div>
-                            <span class="text-xs text-gray-400 min-w-[2rem]">${count}</span>
+                            <span class="text-xs text-gray-400 w-6 text-right">${count}</span>
                         </div>
+                    </div>
+                `).join('');
+            }
+            // Update badges
+            const badgesGrid = document.getElementById('badgesGrid');
+            const noBadges = document.getElementById('noBadges');
+            const badges = userProfile?.badges || [];
+            
+            if (badges.length === 0) {
+                badgesGrid.innerHTML = '';
+                noBadges.classList.remove('hidden');
+            } else {
+                noBadges.classList.add('hidden');
+                badgesGrid.innerHTML = badges.map(badge => `
+                    <div class="badge-gradient text-purple-200 rounded-lg p-4 text-center">
+                        <div class="text-2xl mb-2">🏆</div>
+                        <div class="text-xs font-medium capitalize">${escapeHtml(badge)}</div>
                     </div>
                 `).join('');
             }
@@ -1462,93 +1282,196 @@ Return the response as JSON in this exact format:
             dreams.forEach(dream => {
                 dream.tags?.forEach(tag => allTags.add(tag));
             });
-            const sortedTags = Array.from(allTags).sort();
-            filter.innerHTML = '<option value="">All Archetypes</option>' +
-                sortedTags.map(tag => `<option value="${escapeHtml(tag)}">${escapeHtml(tag)}</option>`).join('');
+            
+            const currentOption = filter.value;
+            filter.innerHTML = '<option value="">All Archetypes</option>';
+            
+            [...allTags].sort().forEach(tag => {
+                const option = document.createElement('option');
+                option.value = tag;
+                option.textContent = tag.charAt(0).toUpperCase() + tag.slice(1);
+                filter.appendChild(option);
+            });
+            
+            filter.value = currentOption;
         }
         function filterDreams() {
-            const search = document.getElementById('searchDreams').value.toLowerCase();
-            const archetype = document.getElementById('filterArchetype').value;
+            const searchTerm = document.getElementById('searchDreams').value.toLowerCase();
+            const selectedArchetype = document.getElementById('filterArchetype').value;
             
-            const filtered = dreams.filter(dream => {
-                const matchesSearch = !search || 
-                    dream.title.toLowerCase().includes(search) || 
-                    dream.description.toLowerCase().includes(search) ||
-                    dream.tags?.some(tag => tag.toLowerCase().includes(search));
+            const filteredDreams = dreams.filter(dream => {
+                const matchesSearch = !searchTerm || 
+                    dream.title.toLowerCase().includes(searchTerm) ||
+                    dream.description.toLowerCase().includes(searchTerm) ||
+                    dream.interpretation.toLowerCase().includes(searchTerm);
                 
-                const matchesArchetype = !archetype || dream.tags?.includes(archetype);
+                const matchesArchetype = !selectedArchetype || 
+                    dream.tags?.includes(selectedArchetype);
                 
                 return matchesSearch && matchesArchetype;
             });
+            
             const gridContainer = document.getElementById('dreamsGrid');
             const timelineContainer = document.getElementById('dreamsTimeline');
             
-            if (filtered.length === 0) {
-                const emptyMessage = '<div class="col-span-full text-center text-gray-400 py-8">No dreams match your search criteria.</div>';
-                gridContainer.innerHTML = emptyMessage;
-                timelineContainer.innerHTML = emptyMessage;
-            } else {
-                gridContainer.innerHTML = filtered.map(dream => createDreamCard(dream)).join('');
-                timelineContainer.innerHTML = filtered.map(dream => createTimelineItem(dream)).join('');
-            }
+            gridContainer.innerHTML = filteredDreams.map(dream => createDreamCard(dream)).join('');
+            timelineContainer.innerHTML = filteredDreams.map(dream => createTimelineItem(dream)).join('');
         }
-        async function handlePrivacyToggle() {
-            if (!currentUser || !userProfile) return;
-            const shareToggle = document.getElementById('shareToggle');
-            const shouldShare = shareToggle.checked;
+        async function analyzeWellness() {
+            if (dreams.length < 3) {
+                showError('wellness', 'Need at least 3 dreams for wellness analysis.');
+                return;
+            }
+            const wellnessSpinner = document.getElementById('wellnessSpinner');
+            const wellnessContent = document.getElementById('wellnessContent');
+            const analyzeBtn = document.getElementById('analyzeWellnessBtn');
+            wellnessSpinner.classList.remove('hidden');
+            analyzeBtn.disabled = true;
             try {
-                const userRef = window.firestore.doc(db, 'users', currentUser.uid);
-                await window.firestore.updateDoc(userRef, {
-                    shareAnonymized: shouldShare
+                const recentDreams = dreams.slice(0, 5);
+                const dreamSummary = recentDreams.map(dream => 
+                    `Dream: "${dream.title}" - ${dream.interpretation} (Tags: ${dream.tags?.join(', ') || 'none'})`
+                ).join('\n\n');
+                const prompt = `Analyze the following recent dreams for mental wellness patterns:
+${dreamSummary}
+Based on these dreams and their interpretations, provide a mental wellness assessment in JSON format:
+{
+  "overallState": "positive|neutral|concerning",
+  "summary": "2-3 sentence summary of mental state based on dream patterns",
+  "recommendations": ["recommendation1", "recommendation2", "recommendation3"],
+  "patterns": ["pattern1", "pattern2"],
+  "warningLevel": "none|mild|moderate|high"
+}
+Focus on psychological patterns, emotional states, and actionable mental health guidance.`;
+                const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=' + window.GEMINI_API_KEY, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            topK: 1,
+                            topP: 1,
+                            maxOutputTokens: 2048,
+                        }
+                    })
                 });
+                if (!response.ok) {
+                    throw new Error('Failed to analyze wellness patterns');
+                }
+                const data = await response.json();
+                const generatedText = data.candidates[0].content.parts[0].text;
                 
-                userProfile.shareAnonymized = shouldShare;
-                showSuccessToast(shouldShare ? 'Data sharing enabled' : 'Data sharing disabled');
+                let wellnessData;
+                try {
+                    const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+                    wellnessData = JSON.parse(jsonMatch[0]);
+                } catch (parseError) {
+                    wellnessData = {
+                        overallState: "neutral",
+                        summary: "Unable to generate detailed analysis. Consider speaking with a mental health professional if you have concerns.",
+                        recommendations: ["Practice mindfulness", "Maintain regular sleep schedule", "Consider journaling"],
+                        patterns: ["Mixed themes"],
+                        warningLevel: "none"
+                    };
+                }
+                displayWellnessAnalysis(wellnessData);
             } catch (error) {
-                console.error('Error updating privacy setting:', error);
-                shareToggle.checked = !shouldShare; // Revert on error
+                console.error('Wellness analysis error:', error);
+                wellnessContent.innerHTML = `
+                    <div class="wellness-neutral rounded-lg p-4">
+                        <p class="text-blue-200">Unable to analyze wellness patterns at this time. Please try again later.</p>
+                    </div>
+                `;
+            } finally {
+                wellnessSpinner.classList.add('hidden');
+                analyzeBtn.disabled = false;
             }
         }
-        // Utility functions
-        function showError(elementId, message) {
-            const errorEl = document.getElementById(elementId);
-            if (errorEl) {
-                const messageEl = errorEl.querySelector('p');
-                if (messageEl) messageEl.textContent = message;
-                errorEl.classList.remove('hidden');
-                setTimeout(() => errorEl.classList.add('hidden'), 5000);
+        function displayWellnessAnalysis(data) {
+            const wellnessContent = document.getElementById('wellnessContent');
+            
+            let cardClass = 'wellness-neutral';
+            let icon = '🧠';
+            let stateColor = 'text-blue-200';
+            
+            if (data.overallState === 'positive') {
+                cardClass = 'wellness-card';
+                icon = '✨';
+                stateColor = 'text-green-200';
+            } else if (data.overallState === 'concerning') {
+                cardClass = 'wellness-warning';
+                icon = '⚠️';
+                stateColor = 'text-red-200';
+            }
+            wellnessContent.innerHTML = `
+                <div class="${cardClass} rounded-lg p-6 space-y-4">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-2xl">${icon}</span>
+                        <h4 class="font-semibold ${stateColor} text-lg capitalize">Mental State: ${data.overallState}</h4>
+                    </div>
+                    
+                    <p class="${stateColor} leading-relaxed">${escapeHtml(data.summary)}</p>
+                    
+                    <div>
+                        <h5 class="font-medium ${stateColor} mb-2">Detected Patterns:</h5>
+                        <ul class="space-y-1">
+                            ${data.patterns.map(pattern => `
+                                <li class="${stateColor} text-sm">• ${escapeHtml(pattern)}</li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h5 class="font-medium ${stateColor} mb-2">Recommendations:</h5>
+                        <ul class="space-y-1">
+                            ${data.recommendations.map(rec => `
+                                <li class="${stateColor} text-sm">• ${escapeHtml(rec)}</li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    
+                    ${data.warningLevel !== 'none' ? `
+                        <div class="bg-red-500/20 rounded-lg p-3 border border-red-400/30">
+                            <p class="text-red-200 text-sm">
+                                <strong>Note:</strong> If you're experiencing persistent distress, anxiety, or concerning patterns, 
+                                consider speaking with a mental health professional. Dream analysis is not a substitute for professional care.
+                            </p>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        function showError(containerId, message) {
+            const container = document.getElementById(containerId + 'Error') || 
+                              document.getElementById(containerId) ||
+                              document.getElementById('analysisError');
+            
+            if (container) {
+                container.querySelector('p').textContent = message;
+                container.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    container.classList.add('hidden');
+                }, 5000);
             }
         }
         function showSuccessToast(message) {
-            const toast = document.getElementById('successToast');
-            const messageEl = document.getElementById('successMessage');
-            messageEl.textContent = message;
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
             
-            toast.classList.remove('translate-x-full', 'opacity-0');
-            toast.classList.add('translate-x-0', 'opacity-100');
+            toastMessage.textContent = message;
+            toast.classList.remove('translate-y-full');
             
             setTimeout(() => {
-                toast.classList.add('translate-x-full', 'opacity-0');
-                toast.classList.remove('translate-x-0', 'opacity-100');
+                toast.classList.add('translate-y-full');
             }, 3000);
-        }
-        function getAuthErrorMessage(errorCode) {
-            switch (errorCode) {
-                case 'auth/email-already-in-use':
-                    return 'This email is already registered. Try logging in instead.';
-                case 'auth/weak-password':
-                    return 'Password should be at least 6 characters long.';
-                case 'auth/invalid-email':
-                    return 'Please enter a valid email address.';
-                case 'auth/user-not-found':
-                    return 'No account found with this email address.';
-                case 'auth/wrong-password':
-                    return 'Incorrect password. Please try again.';
-                case 'auth/too-many-requests':
-                    return 'Too many failed attempts. Please try again later.';
-                default:
-                    return 'An error occurred. Please try again.';
-            }
         }
     </script>
 </body>
